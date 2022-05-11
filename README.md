@@ -9,4 +9,4 @@ or if you would like to help or contribute to the project, we'd love to hear fro
 
 Gratitude to my co-conspirators
 
-Thank you, SuperPhatArrow for your skills, insights and kind guidance, and BitcoinQNA for your time, encouragement and invaluable help. 
+Thank you, SuperPhatArrow for your time, skills, insights and kind guidance, and BitcoinQNA for your encouragement, invaluable help and support. 
