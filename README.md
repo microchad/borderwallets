@@ -6,7 +6,7 @@ Border Wallets offer Bitcoiners a way to quickly, easily, and reliably generate,
 <br>
 <br>
 Border Wallets are a new idea, so if you have not yet familiarised yourself with what they are or how they work with our Seed Grid Generator,
-please visit our website @ BorderWallets.com to learn about it.
+please visit our website [BorderWallets.com](https://borderwallets.com) to learn about it.
 <br>
 <br>
 If you have any ideas for how to make this project better and to reach more people, especially in our target demographic,
