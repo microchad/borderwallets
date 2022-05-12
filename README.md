@@ -11,7 +11,8 @@ please visit our website @ BorderWallets.com to learn about it.
 <br>
 If you have any ideas for how to make this project better and to reach more people, especially in our target demographic,
 or if you would like to help or contribute to the project, we'd love to hear from you.
-
-
+<br><br>
+Want to connect? Twitter.com/GhostofMtc
+<br><br>
 MY CO-CONSPIRATORS
 Thank you, SuperPhatArrow for your time, skills, insights and kind guidance, and BitcoinQNA for your encouragement, invaluable help and support. 
