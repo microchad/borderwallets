@@ -1,4 +1,4 @@
-# <a href="https://borderwallets.com">borderwallets.com</a>
+# [borderwallets.com](https://borderwallets.com)
 Welcome to the Bitcoin Border Wallets repo.
 <br>
 <br>
