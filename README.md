@@ -1,4 +1,4 @@
-# borderwallets.com
+# <a href="https://borderwallets.com">borderwallets.com</a>
 Welcome to the Bitcoin Border Wallets repo.
 <br>
 <br>
@@ -12,7 +12,7 @@ please visit our website @ BorderWallets.com to learn about it.
 If you have any ideas for how to make this project better and to reach more people, especially in our target demographic,
 or if you would like to help or contribute to the project, we'd love to hear from you.
 <br><br>
-Want to connect? Twitter.com/GhostofMtc
+Want to connect? [@ghostofmtc](https://twitter.com/GhostofMtc)
 <br><br>
 MY CO-CONSPIRATORS
 Thank you, SuperPhatArrow for your time, skills, insights and kind guidance, and BitcoinQNA for your encouragement, invaluable help and support. 
