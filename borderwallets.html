@@ -26,6 +26,7 @@
     }
   </style>
   <style>
+    /*cspell:disable*/
     /*! bulma.io v0.9.3 | MIT License | github.com/jgthms/bulma */
     /* Bulma Utilities */
     .button,
@@ -5938,6 +5939,7 @@
       flex-direction: column;
       max-height: calc(100vh - 40px);
       overflow: hidden;
+      overflow-y: hidden;
       -ms-overflow-y: visible;
     }
 
@@ -13095,6 +13097,8 @@
       background-color: #fafafa;
       padding: 3rem 1.5rem 6rem;
     }
+
+    /*cspell:enable*/
   </style>
   <link rel="shortcut icon"
     href="data:image/vnd.microsoft.icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAOtAAADrQAAAAAAAAAAAAAAAAAAAAAAABqT9wAak/cBGpP3JhqT93kak/e9GpP33BqT990ak/fAGpP3fhqT9yoak/cBGpP3AAAAAAAAAAAAAAAAABqT9wAak/cIGpP3ZhqT99gak/f9GpP3/xqT9/8ak/f/GpP3/xqT9/0ak/fbGpP3bhqT9woak/cAAAAAABqT9wAak/cHGpP3hBqT9/cak/f/GJL3/xmS9/8dlPf/GpP3/xqT9/8ak/f/GpP3/xqT9/kak/eOGpP3ChqT9wAak/cAGpP3ZBqT9/cak/f/GZP3/0Wn+P9Mqvn/h8b7/yeZ9/8Wkff/F5L3/xqT9/8ak/f/GpP3+hqT928ak/cAGpP3IxqT99Mak/f/GpP3/xWR9/+Aw/v/pNT8/8fl/f+e0fz/isj7/0+s+f8ak/f/GpP3/xqT9/8ak/fbGpP3LBqT93Iak/f8GpP3/yCW9/95wPr/zuj9//H4///M5/3/weL9/+73/v/g8P7/PaT4/xiS9/8ak/f/GpP3/hqT94Aak/e0GpP3/xqT9/8elff/crz6/8zn/f/p9f7/QaX4/xqT9/+c0Pz//f7//16z+f8Wkff/GpP3/xqT9/8ak/fCGpP30xqT9/8ak/f/GpP3/xSQ9/9suvr/9vv//3/D+/+Bw/v/5PL+/9Pq/f80n/j/GJL3/xqT9/8ak/f/GpP33xqT99Iak/f/GpP3/xqT9/8Xkvf/Qqb4/+32/v/a7v7/m9D8/8Pj/f/r9v7/WrH5/xeS9/8ak/f/GpP3/xqT998ak/eyGpP3/xqT9/8ak/f/GZP3/yWY9//O6P3/v+H9/x6V9/9vu/r//f7//4DD+/8Wkff/GpP3/xqT9/8ak/fBGpP3cBqT9/sak/f/GpP3/xqT9/8mmff/t938//D4/v+13Pz/4PD+/7Xc/P84ofj/GJL3/xqT9/8ak/f9GpP3fhqT9yEak/fRGpP3/xqT9/8Ykvf/b7v6/8nm/f/g8P7/ut/9/8Xj/f8yn/j/GJL3/xqT9/8ak/f/GpP32RqT9yoak/cAGpP3YRqT9/Yak/f/GZP3/yqa+P8pmvj/e8H6/3zB+v91vvr/LJz4/xmS9/8ak/f/GpP3+RqT92wak/cAGpP3ABqT9wcak/eAGpP39hqT9/8Zk/f/GJL3/yWY9/8nmff/GZP3/xqT9/8ak/f/GpP3+BqT94oak/cJGpP3AAAAAAAak/cAGpP3BxqT92Eak/fUGpP3/BqT9/8Zk/f/GZP3/xqT9/8ak/f9GpP32BqT92kak/cJGpP3AAAAAAAAAAAAAAAAABqT9wAak/cAGpP3IhqT93Mak/e3GpP31xqT99cak/e6GpP3eBqT9yYak/cBGpP3AAAAAAAAAAAA4AcAAMADAACAAQAAgAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAEAAIABAADAAwAA4AcAAA==" />
@@ -13132,7 +13136,8 @@
       <div class="box">
         <div class="block">
           If you have not familiarised yourself with what Border Wallets are, how they are created using the Seed
-          Grid Generator, and how to use and handle them, please visit our website before starting.
+          Grid Generator, and how to use and handle them, please visit our <a href="borderwallets.com">website</a>
+          before starting.
           As per our Best Practices guidance, we advise users to transfer this HTML file to an offline, air-gapped
           computer before generating any Seed Grids.
         </div>
@@ -13196,6 +13201,7 @@
     </div>
   </section>
   <script>
+    /*cspell:disable*/
     /** @license
  *
  * jsPDF - PDF Document creation from JavaScript
@@ -15663,6 +15669,8 @@
       'zone',
       'zoo',
     ];
+    /*cspell:enable*/
+
     const rnd11Bit = () => {
       const big = crypto.getRandomValues(new Uint16Array(1))[0];
       const bigString = big.toString(2).padStart(16, '0');
@@ -15682,42 +15690,47 @@
     }
 
     const generateSeedGrid = () => {
-      alert('Not quite ready yet!');
+      const words = [...wordList];
+      shuffle(words);
+      const typeOfGrid = getGridType();
+      const cells = words.map(getCellValue[typeOfGrid]);
+      saveGrid(cells);
     }
 
-    const getCellStyle = text => ({ content: text, styles: { fontStyle: 'bold', fillColor: 220, } })
+    // returns blank, char, num, idx or hex
+    const getGridType = () => document.querySelector('#gridSelect').value
+
+    const getCellValue = {
+      'blank': w => '    ',
+      'char': w => w.slice(0, 4),
+      'num': w => (wordList.indexOf(w) + 1).toString().padStart(4, '0'),
+      'idx': w => (wordList.indexOf(w)).toString().padStart(4, '0'),
+      'hex': w => ' ' + (wordList.indexOf(w) + 1).toString(16).padStart(3, '0'),
+    }
+
+    const getHeaderCellStyle = text => ({ content: text, styles: { fontStyle: 'bold', fillColor: 220, } })
 
     const getHeader = () => (
       ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P']
-        .map(n => getCellStyle(n))
+        .map(n => getHeaderCellStyle(n))
     )
 
-    const getTable = (array) => {
+    const getTable = (cells, startIndex = 0) => {
       const table = [getHeader()];
-      array.forEach((word, i) => {
-        let col = (i % 16) + 1;
-        let row = (Math.floor(i / 16)) + 1;
-        if (!table[row]) table[row] = [getCellStyle(row)];
-        table[row][col] = word.slice(0, 4);
+      cells.forEach((cell, index) => {
+        const i = startIndex + index;
+        const col = (index % 16) + 1;
+        const row = (Math.floor(index / 16)) + 1;
+        const rowNumber = (Math.floor(i / 16)) + 1;
+        if (!table[row]) table[row] = [getHeaderCellStyle(`${rowNumber}`.padStart(3, '0'))];
+        table[row][col] = cell;
       });
-      table
       table.push(getHeader());
       table.forEach(row => row.push(row[0]));
       return table;
     }
 
-    const saveSeedGrid = () => {
-      const words = [...wordList];
-      shuffle(words);
-      saveGrid(words);
-    }
-
-    const saveBlankGrid = () => {
-      const words = [...wordList].map(() => '    ');
-      saveGrid(words);
-    }
-
-    const saveGrid = (array) => {
+    const saveGrid = (cells) => {
       const { jsPDF } = window.jspdf;
       const tableOpts = {
         theme: 'grid',
@@ -15735,23 +15748,22 @@
         .setFontSize(8.5)
         .text('Pt1/2    BWSG No.# ___________  Date: _____________  Checksum verified?  Y/N   Checksum calculator/method:________________', 20, 10)
         .autoTable({
-          body: getTable(array.slice(0, 1024)),
+          body: getTable(cells.slice(0, 1024)),
           ...tableOpts,
         })
         .addPage()
         .text('Pt2/2    BWSG No.# ___________  Date: _____________  Checksum verified?  Y/N   Checksum calculator/method:________________', 20, 10)
         .autoTable({
-          body: getTable(array.slice(1024)),
+          body: getTable(cells.slice(1024), 1024),
           ...tableOpts,
         })
-        .save("BorderWallet-SeedGrid.pdf");
+        .save("BorderWalletSeedGrid.pdf");
     }
 
     let element;
     const words = ['Are you ready to begin, Satoshi?', 'Follow the white rabbit', 'Knock knock, Satoshi', 'Bitcoin Border Wallets are here!'];
 
-    function type(words, index) {
-      index = index ? index : 0;
+    function type(words, index = 0) {
       (function writer(i) {
         var string = words[index];
         if (string.length <= i++) {
@@ -15773,8 +15785,7 @@
       })(0)
     }
 
-    function reverseType(words, index) {
-      index = index ? index : 0;
+    function reverseType(words, index = 0) {
       (function writer(i) {
         var string = words[index];
         if (string.length <= i++) {
