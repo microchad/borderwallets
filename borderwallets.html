@@ -13136,14 +13136,19 @@
       <div class="box">
         <div class="block">
           If you have not familiarised yourself with what Border Wallets are, how they are created using the Seed
-          Grid Generator, and how to use and handle them, please visit our <a href="borderwallets.com">website</a>
-          before starting.
+          Grid Generator, and how to use and handle them, please visit our website before starting.
           As per our Best Practices guidance, we advise users to transfer this HTML file to an offline, air-gapped
           computer before generating any Seed Grids.
-        </div>
+          <br><br>
+          Use the drop-down menu below to select the type of Seed Grid you wish to generate. As a minimum, you will want to download two grids -
+          <br><br>
+          - the Pattern Grid (for mapping out/drawing your preferred 11 or 23-cell pattern or co-ordinates), and
+          <br>- a Word, Number, Index and/or Hex Grid.<br>
+          </div>
         <div class="block">
-          When you hit "GENERATE GRID", your randomised grid of seed words, formatted in a 2-page PDF, will be sent to
-          your downloads folder.
+          Most users will opt to use the Word Grid, which produces the first four letters of each BIP39 seed word in a randomised order
+          using the Fischer-Yates Shuffle algorithm running locally in your browser. When you hit "GENERATE GRID", 
+          your chosen grid(s) - formatted in a 2-page PDF - will be sent to your downloads folder.
         </div>
       </div>
     </div>
@@ -15761,7 +15766,7 @@
     }
 
     let element;
-    const words = ['Are you ready to begin, Satoshi?', 'Follow the white rabbit', 'Knock knock, Satoshi', 'Bitcoin Border Wallets are here!'];
+    const words = ['Are you ready to begin, Satoshi?', 'Visit borderwallets.com for instructions.', 'Dont trust, verify.', 'Not your keys, not your coins.'];
 
     function type(words, index = 0) {
       (function writer(i) {
