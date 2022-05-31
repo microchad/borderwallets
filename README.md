@@ -16,3 +16,7 @@ Want to connect? [@ghostofmtc](https://twitter.com/GhostofMtc)
 <br><br>
 MY CO-CONSPIRATORS
 Thank you, SuperPhatArrow for your time, skills, insights and kind guidance, and BitcoinQNA for your encouragement, invaluable help and support. 
+
+## Development
+
+Please see [CONTRIBUTING.md](https://github.com/microchad/borderwallets/blob/gh-pages/CONTRIBUTING.md)

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bitcoin Border Wallets</title>
+  <style>
+    .blinking-cursor {
+      font-weight: 100;
+      color: #2E3D48;
+      animation: 1s blink step-end infinite;
+    }
+
+    @keyframes blink {
+
+      from,
+      to {
+        color: transparent;
+      }
+
+      50% {
+        color: whitesmoke;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="dev.css">
+  <link rel="shortcut icon"
+    href="data:image/vnd.microsoft.icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAOtAAADrQAAAAAAAAAAAAAAAAAAAAAAABqT9wAak/cBGpP3JhqT93kak/e9GpP33BqT990ak/fAGpP3fhqT9yoak/cBGpP3AAAAAAAAAAAAAAAAABqT9wAak/cIGpP3ZhqT99gak/f9GpP3/xqT9/8ak/f/GpP3/xqT9/0ak/fbGpP3bhqT9woak/cAAAAAABqT9wAak/cHGpP3hBqT9/cak/f/GJL3/xmS9/8dlPf/GpP3/xqT9/8ak/f/GpP3/xqT9/kak/eOGpP3ChqT9wAak/cAGpP3ZBqT9/cak/f/GZP3/0Wn+P9Mqvn/h8b7/yeZ9/8Wkff/F5L3/xqT9/8ak/f/GpP3+hqT928ak/cAGpP3IxqT99Mak/f/GpP3/xWR9/+Aw/v/pNT8/8fl/f+e0fz/isj7/0+s+f8ak/f/GpP3/xqT9/8ak/fbGpP3LBqT93Iak/f8GpP3/yCW9/95wPr/zuj9//H4///M5/3/weL9/+73/v/g8P7/PaT4/xiS9/8ak/f/GpP3/hqT94Aak/e0GpP3/xqT9/8elff/crz6/8zn/f/p9f7/QaX4/xqT9/+c0Pz//f7//16z+f8Wkff/GpP3/xqT9/8ak/fCGpP30xqT9/8ak/f/GpP3/xSQ9/9suvr/9vv//3/D+/+Bw/v/5PL+/9Pq/f80n/j/GJL3/xqT9/8ak/f/GpP33xqT99Iak/f/GpP3/xqT9/8Xkvf/Qqb4/+32/v/a7v7/m9D8/8Pj/f/r9v7/WrH5/xeS9/8ak/f/GpP3/xqT998ak/eyGpP3/xqT9/8ak/f/GZP3/yWY9//O6P3/v+H9/x6V9/9vu/r//f7//4DD+/8Wkff/GpP3/xqT9/8ak/fBGpP3cBqT9/sak/f/GpP3/xqT9/8mmff/t938//D4/v+13Pz/4PD+/7Xc/P84ofj/GJL3/xqT9/8ak/f9GpP3fhqT9yEak/fRGpP3/xqT9/8Ykvf/b7v6/8nm/f/g8P7/ut/9/8Xj/f8yn/j/GJL3/xqT9/8ak/f/GpP32RqT9yoak/cAGpP3YRqT9/Yak/f/GZP3/yqa+P8pmvj/e8H6/3zB+v91vvr/LJz4/xmS9/8ak/f/GpP3+RqT92wak/cAGpP3ABqT9wcak/eAGpP39hqT9/8Zk/f/GJL3/yWY9/8nmff/GZP3/xqT9/8ak/f/GpP3+BqT94oak/cJGpP3AAAAAAAak/cAGpP3BxqT92Eak/fUGpP3/BqT9/8Zk/f/GZP3/xqT9/8ak/f9GpP32BqT92kak/cJGpP3AAAAAAAAAAAAAAAAABqT9wAak/cAGpP3IhqT93Mak/e3GpP31xqT99cak/e6GpP3eBqT9yYak/cBGpP3AAAAAAAAAAAA4AcAAMADAACAAQAAgAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAEAAIABAADAAwAA4AcAAA==" />
+</head>
+
+<body>
+  <section class="hero is-primary">
+    <div class="hero-body">
+      <p class="title">
+        Bitcoin Border Wallets
+      </p>
+      <p class="subtitle">
+        Welcome to the Entropy Grid Generator, by <a href="borderwallets.com">BorderWallets.com</a>.
+      </p>
+    </div>
+  </section>
+  <noscript>
+    <section class="section">
+      <div class="container">
+        <article class="message is-danger">
+          <div class="message-header">
+            <p>JAVASCRIPT IS REQUIRED!</p>
+            <button class="delete" aria-label="delete"></button>
+          </div>
+          <div class="message-body">
+            It appears that JavaScript has been disabled in your browser. In order to use this tool, please enable
+            JavaScript and reload the page.
+          </div>
+        </article>
+      </div>
+    </section>
+  </noscript>
+  <section class="section">
+    <div class="container">
+      <div class="box">
+        <div class="block">
+          If you have not familiarised yourself with what Border Wallets are, how they are created using the Seed
+          Grid Generator, and how to use and handle them, please visit our website before starting.
+          As per our Best Practices guidance, we advise users to transfer this HTML file to an offline, air-gapped
+          computer before generating any Seed Grids.
+          <br><br>
+          Use the drop-down menu below to select the type of Seed Grid you wish to generate. As a minimum, you will want
+          to download two grids -
+          <br><br>
+          - the Pattern Grid (for mapping out/drawing your preferred 11 or 23-cell pattern or co-ordinates), and
+          <br>- a Word, Number, Index and/or Hex Grid.<br>
+        </div>
+        <div class="block">
+          Most users will opt to use the Word Grid, which produces the first four letters of each BIP39 seed word in a
+          randomised order
+          using the Fischer-Yates Shuffle algorithm running locally in your browser. When you hit "GENERATE GRID",
+          your chosen grid(s) - formatted in a 2-page PDF - will be sent to your downloads folder.
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="section">
+    <div class="container">
+      <div class="box">
+        <div id="sectionTabs" class="tabs is-toggle is-fullwidth">
+          <ul>
+            <li id="generateTabBtn" class="is-active"><a>Generate</a></li>
+            <li id="regenerateTabBtn"><a>Regenerate</a></li>
+            <li id="encryptionTabBtn"><a>Encryption</a></li>
+          </ul>
+        </div>
+        <section class="tab-section" id="generate">
+          <div class="field is-horizontal">
+            <div class="field-label is-normal">
+              <label class="label">Type of grid</label>
+            </div>
+            <div class="field-body">
+              <div class="field is-narrow">
+                <div class="control">
+                  <div class="select is-fullwidth is-primary">
+                    <select id="gridSelect">
+                      <option value="blank">Pattern Grid (blank)</option>
+                      <option value="char">Word Grid (the first 4 characters of the word)</option>
+                      <option value="num">Number Grid (from 1-2048)</option>
+                      <option value="idx">Index Grid (from 0-2047)</option>
+                      <option value="hex">Hex Grid (hexadecimal - base16)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="entropyTypeField" class="field is-horizontal is-hidden">
+            <div class="field-label is-normal">
+              <label class="label">Type of entropy</label>
+            </div>
+            <div class="field-body">
+              <div class="field is-narrow">
+                <div class="control">
+                  <div class="select is-fullwidth is-primary">
+                    <select id="entropySelect">
+                      <option value="128">Deterministic (128 bit)</option>
+                      <option value="max">Maximum (19580 bit / 2048!)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="field is-horizontal">
+            <div class="field-label">
+              <!-- Left empty for spacing -->
+            </div>
+            <div class="field-body">
+              <div class="field">
+                <div class="control">
+                  <button class="button is-primary" onclick="generateSeedGrid()">
+                    GENERATE GRID
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="tab-section is-hidden" id="regenerate">
+          Regenerate
+        </section>
+        <section class="tab-section is-hidden" id="encryption">
+          Encryption
+        </section>
+      </div>
+    </div>
+    <br>
+    <br>
+    </div>
+  </section>
+  <section class="section">
+    <div class="container">
+      <div class="block">
+        <div class="tag is-dark is-medium"
+          style="font-family: monospace; width: 100%; justify-content: flex-start; color: hsl(171, 100%, 41%); height: 6em;">
+          &nbsp;<span id="text"></span><span class="blinking-cursor">&#9608;</span></div>
+      </div>
+    </div>
+  </section>
+  <script class="border-wallets-dev-script" src="pdf.js"></script>
+  <script class="border-wallets-dev-script" src="wordlist.js"></script>
+  <script class="border-wallets-dev-script" src="uheprng.js"></script>
+  <script class="border-wallets-dev-script" src="dev.js"></script>
+  <script id="websocket">// NOTE: This script tag MUST be the last on the page!
+    let timer;
+    const setTimer = () => {
+      timer = setInterval(() => {
+        if (ws.OPEN) { clearInterval(timer) }
+        document.location.reload(true)
+      }, 1000)
+    }
+    const ws = new WebSocket('ws://localhost:8080');
+    ws.onopen = () => {
+      clearInterval(timer)
+    }
+    ws.onerror = error => {
+      console.error(`WebSocket error: ${error}`)
+    }
+
+    ws.onmessage = event => {
+      if (event.data === 'reload') document.location.reload(true);
+    }
+
+    ws.onclose = () => {
+      setTimer();
+    }
+  </script>
+</body>
+
+</html>
