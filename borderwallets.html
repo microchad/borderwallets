@@ -13183,8 +13183,8 @@ a.has-text-danger-dark:focus {
 
 <body>
   <section class="hero is-black">
-    <div class="hero-body has-text-centered">
-      <figure class="image is-128x128">
+    <div class="hero-body has-text-centered level">
+      <figure class="image is-128x128 level-left">
         <svg xmlns="http://www.w3.org/2000/svg" width="128px" height="128px" viewBox="0 0 256 256">
           <path id="Selection #1" fill="none" stroke="#ff0000" stroke-width="5" d="M 136.00,65.00
            C 136.00,65.00 167.00,65.00 167.00,65.00
@@ -13216,12 +13216,16 @@ a.has-text-danger-dark:focus {
              9.00,175.00 9.00,65.00 9.00,65.00 Z" />
         </svg>
       </figure>
-      <p class="title">
-        Bitcoin Border Wallets
-      </p>
-      <p class="subtitle">
-        Welcome to the Entropy Grid Generator, by <a href="borderwallets.com">BorderWallets.com</a>.
-      </p>
+      <div class="level-item has-text-centered">
+        <div class="content">
+          <p class="title">
+            Bitcoin Border Wallets
+          </p>
+          <p class="subtitle">
+            Welcome to the Entropy Grid Generator, by <a href="borderwallets.com">BorderWallets.com</a>.
+          </p>
+        </div>
+      </div>
     </div>
   </section>
   <noscript>
@@ -13243,24 +13247,16 @@ a.has-text-danger-dark:focus {
   <section class="section">
     <div class="container">
       <div class="box">
-        <div class="block">
-          If you have not familiarised yourself with what Border Wallets are, how they are created using the Seed
-          Grid Generator, and how to use and handle them, please visit our website before starting.
-          As per our Best Practices guidance, we advise users to transfer this HTML file to an offline, air-gapped
-          computer before generating any Seed Grids.
-          <br><br>
-          Use the drop-down menu below to select the type of Seed Grid you wish to generate. As a minimum, you will want
-          to download two grids -
-          <br><br>
-          - the Pattern Grid (for mapping out/drawing your preferred 11 or 23-cell pattern or co-ordinates), and
-          <br>- a Word, Number, Index and/or Hex Grid.<br>
-        </div>
-        <div class="block">
-          Most users will opt to use the Word Grid, which produces the first four letters of each BIP39 seed word in a
-          randomised order
-          using the Fischer-Yates Shuffle algorithm running locally in your browser. When you hit "GENERATE GRID",
-          your chosen grid(s) - formatted in a 2-page PDF - will be sent to your downloads folder.
-        </div>
+        <article class="message is-dark">
+          <div class="message-body">
+            <div class="content">
+              <p>If you have not familiarised yourself with what Border Wallets are, how they are created using the Seed
+                Grid Generator, and how to use and handle them, please visit our website before starting.
+                As per our Best Practices guidance, we advise users to transfer this HTML file to an offline, air-gapped
+                computer before generating any Seed Grids.</p>
+            </div>
+          </div>
+        </article>
       </div>
     </div>
   </section>
@@ -13326,6 +13322,25 @@ a.has-text-danger-dark:focus {
               </div>
             </div>
           </div>
+          <article class="message is-dark">
+            <div class="message-body">
+              <div class="content">
+                <p>Use the drop-down menu below to select the type of Seed Grid you wish to generate. As a minimum,
+                  you will want
+                  to download two grids</p>
+                <ol>
+                  <li>the Pattern Grid (for mapping out/drawing your preferred 11 or 23-cell pattern or co-ordinates)
+                  </li>
+                  <li>a Word, Number, Index and/or Hex Grid</li>
+                </ol>
+                <p>Most users will opt to use the Word Grid, which produces the first four letters of each BIP39 seed
+                  word in a
+                  randomised order using the Fischer-Yates Shuffle algorithm running locally in your browser. When you
+                  hit "GENERATE GRID",
+                  your chosen grid(s) - formatted in a 2-page PDF - will be sent to your downloads folder.</p>
+              </div>
+            </div>
+          </article>
         </section>
         <section class="tab-section is-hidden" id="regenerate">
           <div class="field">
@@ -13365,9 +13380,26 @@ a.has-text-danger-dark:focus {
               </div>
             </div>
           </div>
+          <article class="message is-dark">
+            <div class="message-body">
+              <div class="content">
+                <p>Info about regenerating grids</p>
+              </div>
+            </div>
+          </article>
         </section>
         <section class="tab-section is-hidden" id="encryption">
-          Encryption
+          <input type="file" id="cryptoFileInput" style="display: none;">
+          <div class="box has-text-centered" style="border: 1px solid hsl(0, 0%, 4%);">
+            Drag and drop a file here for encrypting or decrypting, or click here to select a file.
+          </div>
+          <article class="message is-dark">
+            <div class="message-body">
+              <div class="content">
+                <p>Info all about encrypting and decrypting files</p>
+              </div>
+            </div>
+          </article>
         </section>
       </div>
     </div>
@@ -13392,15 +13424,17 @@ a.has-text-danger-dark:focus {
         <button class="delete" aria-label="close"></button>
       </header>
       <section class="modal-card-body">
-        <p>
-          This Regeneration Phrase was not generated by this tool. Please check it for errors before continuing.
-        </p><br>
-        <p>
-          If you're trying to create a grid from a low entropy Regeneration Phrase, your funds could be at risk.
-        </p><br>
-        <p>
-          Are you sure you want to continue?
-        </p>
+        <div class="content">
+          <p>
+            This Regeneration Phrase was not generated by this tool. Please check it for errors before continuing.
+          </p>
+          <p>
+            If you're trying to create a grid from a low entropy Regeneration Phrase, your funds could be at risk.
+          </p>
+          <p>
+            Are you sure you want to continue?
+          </p>
+        </div>
       </section>
       <footer class="modal-card-foot">
         <button class="button is-success" onclick="regenerateSeedGrid(this, true)">Continue</button>
