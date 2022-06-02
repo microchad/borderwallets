@@ -35,34 +35,34 @@
     <div class="hero-body has-text-centered">
       <figure class="image is-128x128">
         <svg xmlns="http://www.w3.org/2000/svg" width="128px" height="128px" viewBox="0 0 256 256">
-          <path id="Selection #1" fill="none" stroke="#ff0000" stroke-width="1" d="M 136.00,65.00
-                   C 136.00,65.00 167.00,65.00 167.00,65.00
-                     167.00,65.00 167.00,144.00 167.00,144.00
-                     167.00,144.00 176.00,144.00 176.00,144.00
-                     176.00,144.00 176.00,65.00 176.00,65.00
-                     176.00,65.00 206.00,65.00 206.00,65.00
-                     206.00,65.00 206.00,144.00 206.00,144.00
-                     206.00,144.00 215.00,144.00 215.00,144.00
-                     215.00,144.00 215.00,65.00 215.00,65.00
-                     215.00,65.00 246.00,65.00 246.00,65.00
-                     246.00,65.00 246.00,175.00 246.00,175.00
-                     246.00,175.00 136.00,175.00 136.00,175.00
-                     136.00,175.00 136.00,65.00 136.00,65.00 Z
-                   M 40.00,136.00
-                   C 40.00,136.00 88.00,136.00 88.00,136.00
-                     88.00,136.00 88.00,144.00 88.00,144.00
-                     88.00,144.00 40.00,144.00 40.00,144.00
-                     40.00,144.00 40.00,136.00 40.00,136.00 Z
-                   M 40.00,96.00
-                   C 40.00,96.00 88.00,96.00 88.00,96.00
-                     88.00,96.00 88.00,104.00 88.00,104.00
-                     88.00,104.00 40.00,104.00 40.00,104.00
-                     40.00,104.00 40.00,96.00 40.00,96.00 Z
-                   M 9.00,65.00
-                   C 9.00,65.00 119.00,65.00 119.00,65.00
-                     119.00,65.00 119.00,175.00 119.00,175.00
-                     119.00,175.00 9.00,175.00 9.00,175.00
-                     9.00,175.00 9.00,65.00 9.00,65.00 Z" />
+          <path id="Selection #1" fill="none" stroke="#ff0000" stroke-width="5" d="M 136.00,65.00
+           C 136.00,65.00 167.00,65.00 167.00,65.00
+             167.00,65.00 167.00,144.00 167.00,144.00
+             167.00,144.00 176.00,144.00 176.00,144.00
+             176.00,144.00 176.00,65.00 176.00,65.00
+             176.00,65.00 206.00,65.00 206.00,65.00
+             206.00,65.00 206.00,144.00 206.00,144.00
+             206.00,144.00 215.00,144.00 215.00,144.00
+             215.00,144.00 215.00,65.00 215.00,65.00
+             215.00,65.00 246.00,65.00 246.00,65.00
+             246.00,65.00 246.00,175.00 246.00,175.00
+             246.00,175.00 136.00,175.00 136.00,175.00
+             136.00,175.00 136.00,65.00 136.00,65.00 Z
+           M 40.00,136.00
+           C 40.00,136.00 88.00,136.00 88.00,136.00
+             88.00,136.00 88.00,144.00 88.00,144.00
+             88.00,144.00 40.00,144.00 40.00,144.00
+             40.00,144.00 40.00,136.00 40.00,136.00 Z
+           M 40.00,96.00
+           C 40.00,96.00 88.00,96.00 88.00,96.00
+             88.00,96.00 88.00,104.00 88.00,104.00
+             88.00,104.00 40.00,104.00 40.00,104.00
+             40.00,104.00 40.00,96.00 40.00,96.00 Z
+           M 9.00,65.00
+           C 9.00,65.00 119.00,65.00 119.00,65.00
+             119.00,65.00 119.00,175.00 119.00,175.00
+             119.00,175.00 9.00,175.00 9.00,175.00
+             9.00,175.00 9.00,65.00 9.00,65.00 Z" />
         </svg>
       </figure>
       <p class="title">
@@ -179,12 +179,39 @@
         <section class="tab-section is-hidden" id="regenerate">
           <div class="field">
             <div class="control">
-              <textarea class="textarea is-small" placeholder="Enter your Regeneration Phrase"></textarea>
+              <textarea id="regenerationPhraseInput" class="textarea is-small"
+                placeholder="Enter your Regeneration Phrase"></textarea>
             </div>
           </div>
-          <div class="field">
-            <div class="control">
-              <button class="button is-black">Regenerate Grid</button>
+          <div class="field is-horizontal">
+            <div class="field-label is-normal">
+              <label class="label">Type of grid</label>
+            </div>
+            <div class="field-body">
+              <div class="field is-narrow">
+                <div class="control">
+                  <div class="select is-fullwidth is-black">
+                    <select id="regenerateGridSelect">
+                      <option value="char">Word Grid (the first 4 characters of the word)</option>
+                      <option value="num">Number Grid (from 1-2048)</option>
+                      <option value="idx">Index Grid (from 0-2047)</option>
+                      <option value="hex">Hex Grid (hexadecimal - base16)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="field is-horizontal">
+            <div class="field-label">
+              <!-- Left empty for spacing -->
+            </div>
+            <div class="field-body">
+              <div class="field">
+                <div class="control">
+                  <button class="button is-black" onclick="regenerateSeedGrid(this)">Regenerate Grid</button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -206,6 +233,30 @@
       </div>
     </div>
   </section>
+  <div class="modal" id="regenerationConfirmation">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+      <header class="modal-card-head is-danger">
+        <p class="modal-card-title">ARE YOU SURE?</p>
+        <button class="delete" aria-label="close"></button>
+      </header>
+      <section class="modal-card-body">
+        <p>
+          This Regeneration Phrase was not generated by this tool. Please check it for errors before continuing.
+        </p><br>
+        <p>
+          If you're trying to create a grid from a low entropy Regeneration Phrase, your funds could be at risk.
+        </p><br>
+        <p>
+          Are you sure you want to continue?
+        </p>
+      </section>
+      <footer class="modal-card-foot">
+        <button class="button is-success" onclick="regenerateSeedGrid(this, true)">Continue</button>
+        <button class="button is-danger">Cancel</button>
+      </footer>
+    </div>
+  </div>
   <script class="border-wallets-dev-script" src="pdf.js"></script>
   <script class="border-wallets-dev-script" src="wordlist.js"></script>
   <script class="border-wallets-dev-script" src="uheprng.js"></script>

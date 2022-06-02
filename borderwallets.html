@@ -13186,34 +13186,34 @@ a.has-text-danger-dark:focus {
     <div class="hero-body has-text-centered">
       <figure class="image is-128x128">
         <svg xmlns="http://www.w3.org/2000/svg" width="128px" height="128px" viewBox="0 0 256 256">
-          <path id="Selection #1" fill="none" stroke="#ff0000" stroke-width="1" d="M 136.00,65.00
-                   C 136.00,65.00 167.00,65.00 167.00,65.00
-                     167.00,65.00 167.00,144.00 167.00,144.00
-                     167.00,144.00 176.00,144.00 176.00,144.00
-                     176.00,144.00 176.00,65.00 176.00,65.00
-                     176.00,65.00 206.00,65.00 206.00,65.00
-                     206.00,65.00 206.00,144.00 206.00,144.00
-                     206.00,144.00 215.00,144.00 215.00,144.00
-                     215.00,144.00 215.00,65.00 215.00,65.00
-                     215.00,65.00 246.00,65.00 246.00,65.00
-                     246.00,65.00 246.00,175.00 246.00,175.00
-                     246.00,175.00 136.00,175.00 136.00,175.00
-                     136.00,175.00 136.00,65.00 136.00,65.00 Z
-                   M 40.00,136.00
-                   C 40.00,136.00 88.00,136.00 88.00,136.00
-                     88.00,136.00 88.00,144.00 88.00,144.00
-                     88.00,144.00 40.00,144.00 40.00,144.00
-                     40.00,144.00 40.00,136.00 40.00,136.00 Z
-                   M 40.00,96.00
-                   C 40.00,96.00 88.00,96.00 88.00,96.00
-                     88.00,96.00 88.00,104.00 88.00,104.00
-                     88.00,104.00 40.00,104.00 40.00,104.00
-                     40.00,104.00 40.00,96.00 40.00,96.00 Z
-                   M 9.00,65.00
-                   C 9.00,65.00 119.00,65.00 119.00,65.00
-                     119.00,65.00 119.00,175.00 119.00,175.00
-                     119.00,175.00 9.00,175.00 9.00,175.00
-                     9.00,175.00 9.00,65.00 9.00,65.00 Z" />
+          <path id="Selection #1" fill="none" stroke="#ff0000" stroke-width="5" d="M 136.00,65.00
+           C 136.00,65.00 167.00,65.00 167.00,65.00
+             167.00,65.00 167.00,144.00 167.00,144.00
+             167.00,144.00 176.00,144.00 176.00,144.00
+             176.00,144.00 176.00,65.00 176.00,65.00
+             176.00,65.00 206.00,65.00 206.00,65.00
+             206.00,65.00 206.00,144.00 206.00,144.00
+             206.00,144.00 215.00,144.00 215.00,144.00
+             215.00,144.00 215.00,65.00 215.00,65.00
+             215.00,65.00 246.00,65.00 246.00,65.00
+             246.00,65.00 246.00,175.00 246.00,175.00
+             246.00,175.00 136.00,175.00 136.00,175.00
+             136.00,175.00 136.00,65.00 136.00,65.00 Z
+           M 40.00,136.00
+           C 40.00,136.00 88.00,136.00 88.00,136.00
+             88.00,136.00 88.00,144.00 88.00,144.00
+             88.00,144.00 40.00,144.00 40.00,144.00
+             40.00,144.00 40.00,136.00 40.00,136.00 Z
+           M 40.00,96.00
+           C 40.00,96.00 88.00,96.00 88.00,96.00
+             88.00,96.00 88.00,104.00 88.00,104.00
+             88.00,104.00 40.00,104.00 40.00,104.00
+             40.00,104.00 40.00,96.00 40.00,96.00 Z
+           M 9.00,65.00
+           C 9.00,65.00 119.00,65.00 119.00,65.00
+             119.00,65.00 119.00,175.00 119.00,175.00
+             119.00,175.00 9.00,175.00 9.00,175.00
+             9.00,175.00 9.00,65.00 9.00,65.00 Z" />
         </svg>
       </figure>
       <p class="title">
@@ -13330,12 +13330,39 @@ a.has-text-danger-dark:focus {
         <section class="tab-section is-hidden" id="regenerate">
           <div class="field">
             <div class="control">
-              <textarea class="textarea is-small" placeholder="Enter your Regeneration Phrase"></textarea>
+              <textarea id="regenerationPhraseInput" class="textarea is-small"
+                placeholder="Enter your Regeneration Phrase"></textarea>
             </div>
           </div>
-          <div class="field">
-            <div class="control">
-              <button class="button is-black">Regenerate Grid</button>
+          <div class="field is-horizontal">
+            <div class="field-label is-normal">
+              <label class="label">Type of grid</label>
+            </div>
+            <div class="field-body">
+              <div class="field is-narrow">
+                <div class="control">
+                  <div class="select is-fullwidth is-black">
+                    <select id="regenerateGridSelect">
+                      <option value="char">Word Grid (the first 4 characters of the word)</option>
+                      <option value="num">Number Grid (from 1-2048)</option>
+                      <option value="idx">Index Grid (from 0-2047)</option>
+                      <option value="hex">Hex Grid (hexadecimal - base16)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="field is-horizontal">
+            <div class="field-label">
+              <!-- Left empty for spacing -->
+            </div>
+            <div class="field-body">
+              <div class="field">
+                <div class="control">
+                  <button class="button is-black" onclick="regenerateSeedGrid(this)">Regenerate Grid</button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -13357,6 +13384,30 @@ a.has-text-danger-dark:focus {
       </div>
     </div>
   </section>
+  <div class="modal" id="regenerationConfirmation">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+      <header class="modal-card-head is-danger">
+        <p class="modal-card-title">ARE YOU SURE?</p>
+        <button class="delete" aria-label="close"></button>
+      </header>
+      <section class="modal-card-body">
+        <p>
+          This Regeneration Phrase was not generated by this tool. Please check it for errors before continuing.
+        </p><br>
+        <p>
+          If you're trying to create a grid from a low entropy Regeneration Phrase, your funds could be at risk.
+        </p><br>
+        <p>
+          Are you sure you want to continue?
+        </p>
+      </section>
+      <footer class="modal-card-foot">
+        <button class="button is-success" onclick="regenerateSeedGrid(this, true)">Continue</button>
+        <button class="button is-danger">Cancel</button>
+      </footer>
+    </div>
+  </div>
   <script>
       /*cspell:disable*/
 /* prettier:disable */
@@ -15950,7 +16001,55 @@ function uheprng() {
 
       </script>
   <script>
-      const tabButtons = document.querySelectorAll('#sectionTabs>ul>li');
+      // Functions to open and close a modal
+function openModal($el) {
+  $el.classList.add('is-active');
+}
+
+function closeModal($el) {
+  $el.classList.remove('is-active');
+}
+
+function closeAllModals() {
+  (document.querySelectorAll('.modal') || []).forEach(($modal) => {
+    closeModal($modal);
+  });
+}
+
+// Add a click event on buttons to open a specific modal
+// (document.querySelectorAll('.js-modal-trigger') || []).forEach(($trigger) => {
+//   const modal = $trigger.dataset.target;
+//   const $target = document.getElementById(modal);
+
+//   $trigger.addEventListener('click', () => {
+//     openModal($target);
+//   });
+// });
+
+// Add a click event on various child elements to close the parent modal
+(
+  document.querySelectorAll(
+    '.modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button'
+  ) || []
+).forEach(($close) => {
+  const $target = $close.closest('.modal');
+
+  $close.addEventListener('click', () => {
+    closeModal($target);
+  });
+});
+
+// Add a keyboard event to close all modals
+document.addEventListener('keydown', (event) => {
+  const e = event || window.event;
+
+  if (e.keyCode === 27) {
+    // Escape key
+    closeAllModals();
+  }
+});
+
+const tabButtons = document.querySelectorAll('#sectionTabs>ul>li');
 const tabSections = document.querySelectorAll('.tab-section');
 tabButtons.forEach((btn) =>
   btn.addEventListener('click', (event) => {
@@ -16012,13 +16111,41 @@ const shuffle = (array, seed) => {
   prng.done();
 };
 
+const isGoodMnemonic = (mnemonic) => {
+  console.log('mnemonic :>> ', mnemonic);
+  let isGood = true;
+  const array = mnemonic.split(' ');
+  console.log('array.length :>> ', array.length);
+  if (array.length !== 12) return false;
+  array.forEach((word) => {
+    if (!wordList.includes(word)) isGood = false;
+  });
+  console.log('isGood :>> ', isGood);
+  return isGood;
+};
+
+const regenerateSeedGrid = (_event, indemnified) => {
+  const mnemonic = document
+    .getElementById('regenerationPhraseInput')
+    .value.trim();
+  console.log('indemnified :>> ', indemnified);
+  if (!isGoodMnemonic(mnemonic) && !indemnified) {
+    document
+      .querySelector('#regenerationConfirmation')
+      .classList.add('is-active');
+    return;
+  }
+  const words = [...wordList];
+  shuffle(words, mnemonic);
+  const typeOfGrid = document.getElementById('regenerateGridSelect').value;
+  const cells = words.map(getCellValue[typeOfGrid]);
+  saveGrid(cells, mnemonic, typeOfGrid);
+};
+
 const generateSeedGrid = async () => {
   const words = [...wordList];
   const mnemonic = await generateMnemonic();
-  console.log('mnemonic :>> ', mnemonic);
-  console.log('getEntropyType() === 128 :>> ', getEntropyType() === '128');
   const seed = getEntropyType() === '128' ? mnemonic : null;
-  console.log('seed :>> ', seed);
   shuffle(words, seed);
   const typeOfGrid = getGridType();
   const cells = words.map(getCellValue[typeOfGrid]);

@@ -1,3 +1,51 @@
+// Functions to open and close a modal
+function openModal($el) {
+  $el.classList.add('is-active');
+}
+
+function closeModal($el) {
+  $el.classList.remove('is-active');
+}
+
+function closeAllModals() {
+  (document.querySelectorAll('.modal') || []).forEach(($modal) => {
+    closeModal($modal);
+  });
+}
+
+// Add a click event on buttons to open a specific modal
+// (document.querySelectorAll('.js-modal-trigger') || []).forEach(($trigger) => {
+//   const modal = $trigger.dataset.target;
+//   const $target = document.getElementById(modal);
+
+//   $trigger.addEventListener('click', () => {
+//     openModal($target);
+//   });
+// });
+
+// Add a click event on various child elements to close the parent modal
+(
+  document.querySelectorAll(
+    '.modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button'
+  ) || []
+).forEach(($close) => {
+  const $target = $close.closest('.modal');
+
+  $close.addEventListener('click', () => {
+    closeModal($target);
+  });
+});
+
+// Add a keyboard event to close all modals
+document.addEventListener('keydown', (event) => {
+  const e = event || window.event;
+
+  if (e.keyCode === 27) {
+    // Escape key
+    closeAllModals();
+  }
+});
+
 const tabButtons = document.querySelectorAll('#sectionTabs>ul>li');
 const tabSections = document.querySelectorAll('.tab-section');
 tabButtons.forEach((btn) =>
@@ -60,13 +108,41 @@ const shuffle = (array, seed) => {
   prng.done();
 };
 
+const isGoodMnemonic = (mnemonic) => {
+  console.log('mnemonic :>> ', mnemonic);
+  let isGood = true;
+  const array = mnemonic.split(' ');
+  console.log('array.length :>> ', array.length);
+  if (array.length !== 12) return false;
+  array.forEach((word) => {
+    if (!wordList.includes(word)) isGood = false;
+  });
+  console.log('isGood :>> ', isGood);
+  return isGood;
+};
+
+const regenerateSeedGrid = (_event, indemnified) => {
+  const mnemonic = document
+    .getElementById('regenerationPhraseInput')
+    .value.trim();
+  console.log('indemnified :>> ', indemnified);
+  if (!isGoodMnemonic(mnemonic) && !indemnified) {
+    document
+      .querySelector('#regenerationConfirmation')
+      .classList.add('is-active');
+    return;
+  }
+  const words = [...wordList];
+  shuffle(words, mnemonic);
+  const typeOfGrid = document.getElementById('regenerateGridSelect').value;
+  const cells = words.map(getCellValue[typeOfGrid]);
+  saveGrid(cells, mnemonic, typeOfGrid);
+};
+
 const generateSeedGrid = async () => {
   const words = [...wordList];
   const mnemonic = await generateMnemonic();
-  console.log('mnemonic :>> ', mnemonic);
-  console.log('getEntropyType() === 128 :>> ', getEntropyType() === '128');
   const seed = getEntropyType() === '128' ? mnemonic : null;
-  console.log('seed :>> ', seed);
   shuffle(words, seed);
   const typeOfGrid = getGridType();
   const cells = words.map(getCellValue[typeOfGrid]);
