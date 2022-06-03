@@ -1,3 +1,6 @@
+const FILE_EXT = 'bweg',
+  ITERATIONS = 10000000;
+
 // Functions to open and close a modal
 function openModal($el) {
   $el.classList.add('is-active');
@@ -45,6 +48,196 @@ document.addEventListener('keydown', (event) => {
     closeAllModals();
   }
 });
+
+const processingModal = document.getElementById('processingModal');
+const startProcessing = () => processingModal.classList.add('is-active');
+const endProcessing = () => processingModal.classList.remove('is-active');
+
+const dropbox = document.getElementById('dropbox'),
+  fileElem = document.getElementById('cryptoFileInput');
+dropbox.addEventListener('dragenter', dragenter, false);
+dropbox.addEventListener('dragover', dragover, false);
+dropbox.addEventListener('drop', drop, false);
+dropbox.addEventListener(
+  'click',
+  function (e) {
+    if (fileElem) {
+      fileElem.click();
+    }
+  },
+  false
+);
+fileElem.addEventListener(
+  'change',
+  function () {
+    handleFiles(this.files);
+  },
+  false
+);
+
+function dragenter(e) {
+  e.stopPropagation();
+  e.preventDefault();
+}
+
+function dragover(e) {
+  e.stopPropagation();
+  e.preventDefault();
+}
+
+function drop(e) {
+  e.stopPropagation();
+  e.preventDefault();
+
+  const dt = e.dataTransfer;
+  const files = dt.files;
+
+  handleFiles(files);
+}
+
+const getFileExtension = (fileName) => fileName.split('.').at(-1);
+
+function handleFiles(files) {
+  startProcessing();
+  const file = files[0];
+  console.log('file :>> ', file);
+  const ext = getFileExtension(file.name);
+  if (ext === FILE_EXT) {
+    decryptFile(file);
+  } else {
+    encryptFile(file);
+  }
+}
+function getKeyMaterial() {
+  const password = document.getElementById('passphrase').value;
+  const passwordConfirm = document.getElementById('passphraseConfirm').value;
+  if (!password) throw new Error('Passphrase required!');
+  if (password !== passwordConfirm)
+    throw new Error('Passphrase inputs do not match!');
+  const enc = new TextEncoder();
+  return window.crypto.subtle.importKey(
+    'raw',
+    enc.encode(password),
+    { name: 'PBKDF2' },
+    false,
+    ['deriveBits', 'deriveKey']
+  );
+}
+function getKey(keyMaterial, salt) {
+  return window.crypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt: salt,
+      iterations: ITERATIONS,
+      hash: 'SHA-256',
+    },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt']
+  );
+}
+
+const encryptFile = async (file) => {
+  try {
+    const keyMaterial = await getKeyMaterial();
+    const salt = window.crypto.getRandomValues(new Uint8Array(32));
+    const key = await getKey(keyMaterial, salt);
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const encoder = new TextEncoder();
+    const info = {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    };
+    encodedInfo = encoder.encode(JSON.stringify(info));
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const fileAsURL = e.target.result;
+      console.log('fileAsURL :>> ', fileAsURL);
+      encoded = encoder.encode(fileAsURL);
+      const version = 1;
+      const ciphertext = await window.crypto.subtle.encrypt(
+        {
+          name: 'AES-GCM',
+          iv: iv,
+        },
+        key,
+        encoded
+      );
+      console.log('ciphertext :>> ', ciphertext);
+      const result = {
+        version,
+        info,
+        iv: btoa(iv),
+        salt: btoa(salt),
+        iterations: ITERATIONS,
+        ciphertext: btoa([...new Uint8Array(ciphertext)]),
+      };
+      console.log('result :>> ', result);
+      const fileURL = `data:application/json,${JSON.stringify(result)}`;
+      const ext = getFileExtension(file.name);
+      const fName = file.name.slice(0, file.name.length - (ext.length + 1));
+      saveFile(fileURL, `${fName}.${FILE_EXT}`);
+    };
+    reader.readAsDataURL(file);
+  } catch (e) {
+    endProcessing();
+    alert(e);
+  }
+};
+
+const decryptFile = async (file) => {
+  try {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      if (!e.target.result) throw new Error('No file found!');
+      const data = JSON.parse(e.target.result);
+      console.log('data :>> ', data);
+      if (data.version !== 1)
+        throw new Error('Only Version 1 is currently supported');
+      const salt = new Uint8Array(atob(data.salt).split(','));
+      console.log('salt :>> ', salt);
+      const iv = new Uint8Array(atob(data.iv).split(','));
+      console.log('iv :>> ', iv);
+      const ciphertext = new Uint8Array(atob(data.ciphertext).split(','))
+        .buffer;
+      const keyMaterial = await getKeyMaterial();
+      const key = await getKey(keyMaterial, salt);
+      const decrypted = await window.crypto.subtle.decrypt(
+        {
+          name: 'AES-GCM',
+          iv: iv,
+        },
+        key,
+        ciphertext
+      );
+      console.log('decrypted :>> ', decrypted);
+      const decoder = new TextDecoder();
+      const decoded = decoder.decode(decrypted);
+      console.log('decoded :>> ', decoded);
+      if (!decoded.startsWith(`data:${data.info.type};base64,`))
+        throw new Error('Failed to decrypt');
+      saveFile(decoded, data.info.name);
+    };
+
+    reader.readAsText(file);
+  } catch (e) {
+    endProcessing();
+    alert(e);
+  }
+};
+
+const saveFile = (fileURL, fileName) => {
+  const a = document.createElement('a');
+  a.style.display = 'none';
+  a.href = fileURL;
+  // the filename you want
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  endProcessing();
+};
 
 const tabButtons = document.querySelectorAll('#sectionTabs>ul>li');
 const tabSections = document.querySelectorAll('.tab-section');
@@ -109,15 +302,12 @@ const shuffle = (array, seed) => {
 };
 
 const isGoodMnemonic = (mnemonic) => {
-  console.log('mnemonic :>> ', mnemonic);
   let isGood = true;
   const array = mnemonic.split(' ');
-  console.log('array.length :>> ', array.length);
   if (array.length !== 12) return false;
   array.forEach((word) => {
     if (!wordList.includes(word)) isGood = false;
   });
-  console.log('isGood :>> ', isGood);
   return isGood;
 };
 
@@ -125,7 +315,6 @@ const regenerateSeedGrid = (_event, indemnified) => {
   const mnemonic = document
     .getElementById('regenerationPhraseInput')
     .value.trim();
-  console.log('indemnified :>> ', indemnified);
   if (!isGoodMnemonic(mnemonic) && !indemnified) {
     document
       .querySelector('#regenerationConfirmation')

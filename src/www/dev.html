@@ -24,6 +24,103 @@
         color: whitesmoke;
       }
     }
+
+    .loader {
+      color: #000000;
+      font-size: 90px;
+      text-indent: -9999em;
+      overflow: hidden;
+      width: 1em;
+      height: 1em;
+      border-radius: 50%;
+      margin: 72px auto;
+      position: relative;
+      -webkit-transform: translateZ(0);
+      -ms-transform: translateZ(0);
+      transform: translateZ(0);
+      -webkit-animation: load6 1.7s infinite ease, round 1.7s infinite ease;
+      animation: load6 1.7s infinite ease, round 1.7s infinite ease;
+    }
+
+    @-webkit-keyframes load6 {
+      0% {
+        box-shadow: 0 -0.83em 0 -0.4em, 0 -0.83em 0 -0.42em, 0 -0.83em 0 -0.44em, 0 -0.83em 0 -0.46em, 0 -0.83em 0 -0.477em;
+      }
+
+      5%,
+      95% {
+        box-shadow: 0 -0.83em 0 -0.4em, 0 -0.83em 0 -0.42em, 0 -0.83em 0 -0.44em, 0 -0.83em 0 -0.46em, 0 -0.83em 0 -0.477em;
+      }
+
+      10%,
+      59% {
+        box-shadow: 0 -0.83em 0 -0.4em, -0.087em -0.825em 0 -0.42em, -0.173em -0.812em 0 -0.44em, -0.256em -0.789em 0 -0.46em, -0.297em -0.775em 0 -0.477em;
+      }
+
+      20% {
+        box-shadow: 0 -0.83em 0 -0.4em, -0.338em -0.758em 0 -0.42em, -0.555em -0.617em 0 -0.44em, -0.671em -0.488em 0 -0.46em, -0.749em -0.34em 0 -0.477em;
+      }
+
+      38% {
+        box-shadow: 0 -0.83em 0 -0.4em, -0.377em -0.74em 0 -0.42em, -0.645em -0.522em 0 -0.44em, -0.775em -0.297em 0 -0.46em, -0.82em -0.09em 0 -0.477em;
+      }
+
+      100% {
+        box-shadow: 0 -0.83em 0 -0.4em, 0 -0.83em 0 -0.42em, 0 -0.83em 0 -0.44em, 0 -0.83em 0 -0.46em, 0 -0.83em 0 -0.477em;
+      }
+    }
+
+    @keyframes load6 {
+      0% {
+        box-shadow: 0 -0.83em 0 -0.4em, 0 -0.83em 0 -0.42em, 0 -0.83em 0 -0.44em, 0 -0.83em 0 -0.46em, 0 -0.83em 0 -0.477em;
+      }
+
+      5%,
+      95% {
+        box-shadow: 0 -0.83em 0 -0.4em, 0 -0.83em 0 -0.42em, 0 -0.83em 0 -0.44em, 0 -0.83em 0 -0.46em, 0 -0.83em 0 -0.477em;
+      }
+
+      10%,
+      59% {
+        box-shadow: 0 -0.83em 0 -0.4em, -0.087em -0.825em 0 -0.42em, -0.173em -0.812em 0 -0.44em, -0.256em -0.789em 0 -0.46em, -0.297em -0.775em 0 -0.477em;
+      }
+
+      20% {
+        box-shadow: 0 -0.83em 0 -0.4em, -0.338em -0.758em 0 -0.42em, -0.555em -0.617em 0 -0.44em, -0.671em -0.488em 0 -0.46em, -0.749em -0.34em 0 -0.477em;
+      }
+
+      38% {
+        box-shadow: 0 -0.83em 0 -0.4em, -0.377em -0.74em 0 -0.42em, -0.645em -0.522em 0 -0.44em, -0.775em -0.297em 0 -0.46em, -0.82em -0.09em 0 -0.477em;
+      }
+
+      100% {
+        box-shadow: 0 -0.83em 0 -0.4em, 0 -0.83em 0 -0.42em, 0 -0.83em 0 -0.44em, 0 -0.83em 0 -0.46em, 0 -0.83em 0 -0.477em;
+      }
+    }
+
+    @-webkit-keyframes round {
+      0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+      }
+
+      100% {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes round {
+      0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+      }
+
+      100% {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+      }
+    }
   </style>
   <link rel="stylesheet" href="dev.css">
   <link rel="shortcut icon"
@@ -99,8 +196,8 @@
         <article class="message is-dark">
           <div class="message-body">
             <div class="content">
-              <p>If you have not familiarised yourself with what Border Wallets are, how they are created using the Seed
-                Grid Generator, and how to use and handle them, please visit our website before starting.
+              <p>If you have not familiarised yourself with what Border Wallets are, how they are created using the
+                Entropy Grid Generator, and how to use and handle them, please visit our website before starting.
                 As per our Best Practices guidance, we advise users to transfer this HTML file to an offline, air-gapped
                 computer before generating any Seed Grids.</p>
             </div>
@@ -174,9 +271,8 @@
           <article class="message is-dark">
             <div class="message-body">
               <div class="content">
-                <p>Use the drop-down menu below to select the type of Seed Grid you wish to generate. As a minimum,
-                  you will want
-                  to download two grids</p>
+                <p>Use the drop-down menu above to select the type of Seed Grid you wish to generate. As a minimum,
+                  you will want to download two grids</p>
                 <ol>
                   <li>the Pattern Grid (for mapping out/drawing your preferred 11 or 23-cell pattern or co-ordinates)
                   </li>
@@ -187,6 +283,7 @@
                   randomised order using the Fischer-Yates Shuffle algorithm running locally in your browser. When you
                   hit "GENERATE GRID",
                   your chosen grid(s) - formatted in a 2-page PDF - will be sent to your downloads folder.</p>
+                <p>Entropy drop-down explainer TODO</p>
               </div>
             </div>
           </article>
@@ -239,8 +336,22 @@
         </section>
         <section class="tab-section is-hidden" id="encryption">
           <input type="file" id="cryptoFileInput" style="display: none;">
-          <div class="box has-text-centered" style="border: 1px solid hsl(0, 0%, 4%);">
-            Drag and drop a file here for encrypting or decrypting, or click here to select a file.
+          <div class="box has-text-centered" id="dropbox" style="border: 1px solid hsl(0, 0%, 4%); cursor: pointer;">
+            <br><br>Drag and drop a file here for encrypting or decrypting, or click here to select a
+            file.<br><br><br>
+          </div>
+          <div class="field">
+            <label class="label">Passphrase</label>
+            <div class="control">
+              <input id="passphrase" class="input is-rounded" type="password"
+                placeholder="Passphrase for encryption or decryption">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Passphrase</label>
+            <div class="control">
+              <input id="passphraseConfirm" class="input is-rounded" type="password" placeholder="Confirm Passphrase">
+            </div>
           </div>
           <article class="message is-dark">
             <div class="message-body">
@@ -289,6 +400,19 @@
         <button class="button is-success" onclick="regenerateSeedGrid(this, true)">Continue</button>
         <button class="button is-danger">Cancel</button>
       </footer>
+    </div>
+  </div>
+  <div class="modal" id="processingModal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+      <section class="modal-card-body">
+        <div class="content">
+          <div class="loader">Loading...</div>
+          <h1>Processing..</h1>
+          <p>Please be patient, this may take as much as 20 seconds depending on the power of your device.</p>
+          <p>The longer it takes for you, the harder it is for an attacker!</p>
+        </div>
+      </section>
     </div>
   </div>
   <script class="border-wallets-dev-script" src="pdf.js"></script>
