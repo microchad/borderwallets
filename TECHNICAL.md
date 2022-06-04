@@ -27,7 +27,7 @@ Derivation](https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication80
 - 96 bit IV
 - 10,000,000 Iteration Count
 
-The Dropbox library [zxcvbn](https://github.com/dropbox/zxcvbn) is used to test password strength and the *Border Wallets Entropy Grid Generator* will prevent encryption of any file where the password used for encryption does not score at least `4` by zxcvbn.
+The Dropbox library [zxcvbn](https://github.com/dropbox/zxcvbn) is used to test password strength and the *Border Wallets Entropy Grid Generator* will prevent encryption of any file where the password used for encryption does not score a `4` (the maximum strength) by zxcvbn.
 
 The high iteration count takes quite a long time on a standard PC but since the user only needs to do this twice (once for encryption and once for decryption), it will help to increase the cost of a brute force or dictionary attack.
 
