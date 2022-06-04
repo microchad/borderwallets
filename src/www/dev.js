@@ -16,16 +16,6 @@ function closeAllModals() {
   });
 }
 
-// Add a click event on buttons to open a specific modal
-// (document.querySelectorAll('.js-modal-trigger') || []).forEach(($trigger) => {
-//   const modal = $trigger.dataset.target;
-//   const $target = document.getElementById(modal);
-
-//   $trigger.addEventListener('click', () => {
-//     openModal($target);
-//   });
-// });
-
 // Add a click event on various child elements to close the parent modal
 (
   document.querySelectorAll(
@@ -316,10 +306,8 @@ regenerationInput.addEventListener('keyup', (event) => {
   const lastWord = wordArray[wordArray.length - 1];
   const found = wordList.find((s) => s.startsWith(lastWord));
   if (lastWord === found || found === undefined) return false;
-  console.log('found :>> ', found);
   const missingLetters = found.slice(lastWord.length) + ' ';
   const suggestedInput = userInput + missingLetters;
-  console.log('suggestedInput :>> ', suggestedInput);
   inputElement.value = suggestedInput;
   for (let i = 0; i < missingLetters.length; i++) {
     selection.modify('extend', 'backward', 'character');
