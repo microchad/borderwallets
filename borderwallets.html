@@ -13493,11 +13493,6 @@ a.has-text-danger-dark:focus {
           </article>
         </section>
         <section class="tab-section is-hidden" id="encryption">
-          <input type="file" id="cryptoFileInput" style="display: none;">
-          <div class="box has-text-centered" id="dropbox" style="border: 1px solid hsl(0, 0%, 4%); cursor: pointer;">
-            <br><br>Drag and drop a file here for encrypting or decrypting, or click here to select a
-            file.<br><br><br>
-          </div>
           <div class="field">
             <label class="label">Passphrase</label>
             <div class="control">
@@ -13515,6 +13510,11 @@ a.has-text-danger-dark:focus {
           <div class="field">
             <progress id="password-strength-meter" class="progress" value="0" max="4"></progress>
             <p id="password-strength-text"></p>
+          </div>
+          <input type="file" id="cryptoFileInput" style="display: none;">
+          <div class="box has-text-centered" id="dropbox" style="border: 1px solid hsl(0, 0%, 4%); cursor: pointer;">
+            <br><br>Drag and drop a file here for encrypting or decrypting, or click here to select a
+            file.<br><br><br>
           </div>
           <article class="message is-dark">
             <div class="message-body">
@@ -16378,7 +16378,7 @@ function getKeyMaterial() {
   if (!passwordValue) throw new Error('Passphrase required!');
   if (passwordValue !== passwordValueConfirm)
     throw new Error('Passphrase inputs do not match!');
-  if (passwordStrengthMeter.value !== '4')
+  if (passwordStrengthMeter.value !== 4)
     throw new Error('A stronger passphrase is required!');
   const enc = new TextEncoder();
   return window.crypto.subtle.importKey(

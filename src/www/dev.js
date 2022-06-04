@@ -175,7 +175,7 @@ function getKeyMaterial() {
   if (!passwordValue) throw new Error('Passphrase required!');
   if (passwordValue !== passwordValueConfirm)
     throw new Error('Passphrase inputs do not match!');
-  if (passwordStrengthMeter.value !== '4')
+  if (passwordStrengthMeter.value !== 4)
     throw new Error('A stronger passphrase is required!');
   const enc = new TextEncoder();
   return window.crypto.subtle.importKey(
