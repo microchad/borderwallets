@@ -121,6 +121,13 @@
         transform: rotate(360deg);
       }
     }
+
+    .feedback {
+      color: #9ab;
+      font-size: 90%;
+      padding: 0 .25em;
+      margin-top: 1em;
+    }
   </style>
   <link rel="stylesheet" href="dev.css">
   <link rel="shortcut icon"
@@ -343,15 +350,20 @@
           <div class="field">
             <label class="label">Passphrase</label>
             <div class="control">
-              <input id="passphrase" class="input is-rounded" type="password"
+              <input id="passphrase" class="crypto-passphrase-inputs input is-rounded" type="password"
                 placeholder="Passphrase for encryption or decryption">
             </div>
           </div>
           <div class="field">
-            <label class="label">Passphrase</label>
+            <label class="label">Confirm Passphrase</label>
             <div class="control">
-              <input id="passphraseConfirm" class="input is-rounded" type="password" placeholder="Confirm Passphrase">
+              <input id="passphraseConfirm" class="crypto-passphrase-inputs input is-rounded" type="password"
+                placeholder="Confirm Passphrase">
             </div>
+          </div>
+          <div class="field">
+            <progress id="password-strength-meter" class="progress" value="0" max="4"></progress>
+            <p id="password-strength-text"></p>
           </div>
           <article class="message is-dark">
             <div class="message-body">
@@ -418,6 +430,7 @@
   <script class="border-wallets-dev-script" src="pdf.js"></script>
   <script class="border-wallets-dev-script" src="wordlist.js"></script>
   <script class="border-wallets-dev-script" src="uheprng.js"></script>
+  <script class="border-wallets-dev-script" src="zxcvbn.js"></script>
   <script class="border-wallets-dev-script" src="dev.js"></script>
   <script id="websocket">// NOTE: This script tag MUST be the last on the page!
     let timer;

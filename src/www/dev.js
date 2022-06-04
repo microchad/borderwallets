@@ -100,7 +100,6 @@ const getFileExtension = (fileName) => fileName.split('.').at(-1);
 function handleFiles(files) {
   startProcessing();
   const file = files[0];
-  console.log('file :>> ', file);
   const ext = getFileExtension(file.name);
   if (ext === FILE_EXT) {
     decryptFile(file);
@@ -108,16 +107,90 @@ function handleFiles(files) {
     encryptFile(file);
   }
 }
+const strength = {
+  0: 'Worst',
+  1: 'Bad',
+  2: 'Weak',
+  3: 'Good',
+  4: 'Strong',
+};
+
+const strengthClass = {
+  0: 'is-danger',
+  1: 'is-danger',
+  2: 'is-danger',
+  3: 'is-warning',
+  4: 'is-success',
+};
+
+const password = document.getElementById('passphrase');
+const passwordConfirm = document.getElementById('passphraseConfirm');
+const passwordStrengthMeter = document.getElementById(
+  'password-strength-meter'
+);
+
+password.addEventListener('input', function () {
+  const passwordStrengthText = document.getElementById(
+    'password-strength-text'
+  );
+  const val = password.value;
+  const result = zxcvbn(val);
+
+  // Update the password strength meter
+  passwordStrengthMeter.value = result.score;
+  passwordStrengthMeter.classList.remove(
+    'is-danger',
+    'is-warning',
+    'is-success'
+  );
+  passwordStrengthMeter.classList.add(strengthClass[result.score]);
+
+  // Update the text indicator
+  if (val !== '') {
+    passwordStrengthText.innerHTML =
+      'Strength: ' +
+      '<strong>' +
+      strength[result.score] +
+      '</strong>' +
+      "<span class='feedback'>" +
+      result.feedback.warning +
+      ' ' +
+      result.feedback.suggestions +
+      '</span';
+  } else {
+    passwordStrengthText.innerHTML = '';
+  }
+});
+const checkPassphrasesMatch = () => {
+  passwordConfirm.classList.toggle(
+    'is-danger',
+    password.value !== passwordConfirm.value
+  );
+  password.classList.toggle(
+    'is-success',
+    password.value === passwordConfirm.value
+  );
+  passwordConfirm.classList.toggle(
+    'is-success',
+    password.value === passwordConfirm.value
+  );
+};
+document.querySelectorAll('.crypto-passphrase-inputs').forEach((input) => {
+  input.addEventListener('input', checkPassphrasesMatch);
+});
 function getKeyMaterial() {
-  const password = document.getElementById('passphrase').value;
-  const passwordConfirm = document.getElementById('passphraseConfirm').value;
-  if (!password) throw new Error('Passphrase required!');
-  if (password !== passwordConfirm)
+  const passwordValue = document.getElementById('passphrase').value;
+  const passwordValueConfirm =
+    document.getElementById('passphraseConfirm').value;
+  if (!passwordValue) throw new Error('Passphrase required!');
+  if (passwordValue !== passwordValueConfirm)
     throw new Error('Passphrase inputs do not match!');
+  if (passwordStrengthMeter.value !== '4')
+    throw new Error('A stronger passphrase is required!');
   const enc = new TextEncoder();
   return window.crypto.subtle.importKey(
     'raw',
-    enc.encode(password),
+    enc.encode(passwordValue),
     { name: 'PBKDF2' },
     false,
     ['deriveBits', 'deriveKey']
@@ -154,7 +227,6 @@ const encryptFile = async (file) => {
     const reader = new FileReader();
     reader.onload = async (e) => {
       const fileAsURL = e.target.result;
-      console.log('fileAsURL :>> ', fileAsURL);
       encoded = encoder.encode(fileAsURL);
       const version = 1;
       const ciphertext = await window.crypto.subtle.encrypt(
@@ -165,7 +237,6 @@ const encryptFile = async (file) => {
         key,
         encoded
       );
-      console.log('ciphertext :>> ', ciphertext);
       const result = {
         version,
         info,
@@ -174,7 +245,6 @@ const encryptFile = async (file) => {
         iterations: ITERATIONS,
         ciphertext: btoa([...new Uint8Array(ciphertext)]),
       };
-      console.log('result :>> ', result);
       const fileURL = `data:application/json,${JSON.stringify(result)}`;
       const ext = getFileExtension(file.name);
       const fName = file.name.slice(0, file.name.length - (ext.length + 1));
@@ -193,13 +263,10 @@ const decryptFile = async (file) => {
     reader.onload = async (e) => {
       if (!e.target.result) throw new Error('No file found!');
       const data = JSON.parse(e.target.result);
-      console.log('data :>> ', data);
       if (data.version !== 1)
         throw new Error('Only Version 1 is currently supported');
       const salt = new Uint8Array(atob(data.salt).split(','));
-      console.log('salt :>> ', salt);
       const iv = new Uint8Array(atob(data.iv).split(','));
-      console.log('iv :>> ', iv);
       const ciphertext = new Uint8Array(atob(data.ciphertext).split(','))
         .buffer;
       const keyMaterial = await getKeyMaterial();
@@ -212,10 +279,8 @@ const decryptFile = async (file) => {
         key,
         ciphertext
       );
-      console.log('decrypted :>> ', decrypted);
       const decoder = new TextDecoder();
       const decoded = decoder.decode(decrypted);
-      console.log('decoded :>> ', decoded);
       if (!decoded.startsWith(`data:${data.info.type};base64,`))
         throw new Error('Failed to decrypt');
       saveFile(decoded, data.info.name);
