@@ -293,6 +293,39 @@ const decryptFile = async (file) => {
   }
 };
 
+const regenerationInput = document.getElementById('regenerationPhraseInput');
+regenerationInput.addEventListener('keydown', (event) => {
+  const e = event || window.event;
+  const selection = window.getSelection();
+  if (e.keyCode === 13) {
+    // Enter key
+    selection.collapseToEnd();
+    return false;
+  }
+});
+regenerationInput.addEventListener('keyup', (event) => {
+  const e = event || window.event;
+  const selection = window.getSelection();
+  if (e.keyCode === 13) {
+    // Enter key
+    return false;
+  }
+  const inputElement = document.getElementById('regenerationPhraseInput');
+  const userInput = `${inputElement.value}`;
+  const wordArray = userInput.split(' ');
+  const lastWord = wordArray[wordArray.length - 1];
+  const found = wordList.find((s) => s.startsWith(lastWord));
+  if (lastWord === found || found === undefined) return false;
+  console.log('found :>> ', found);
+  const missingLetters = found.slice(lastWord.length) + ' ';
+  const suggestedInput = userInput + missingLetters;
+  console.log('suggestedInput :>> ', suggestedInput);
+  inputElement.value = suggestedInput;
+  for (let i = 0; i < missingLetters.length; i++) {
+    selection.modify('extend', 'backward', 'character');
+  }
+});
+
 const saveFile = (fileURL, fileName) => {
   const a = document.createElement('a');
   a.style.display = 'none';
