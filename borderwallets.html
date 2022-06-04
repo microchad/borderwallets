@@ -16718,8 +16718,8 @@ const saveGrid = (cells, seed, typeOfGrid) => {
       : 'Maximum Entropy Grid - keep this safe, there is no way to regenerate it if lost.';
   const topText = (page) =>
     typeOfGrid === 'blank'
-      ? `Pt${page}/2    BWSG No.# ___________  Date: _____________`
-      : `Pt${page}/2    BWSG No.# ___________  Date: _____________  Checksum verified?  Y/N   Checksum calculator/method:________________`;
+      ? `Pt${page}/2    BWEG No.# ___________  Date: _____________`
+      : `Pt${page}/2    BWEG No.# ___________  Date: _____________  Checksum verified?  Y/N   Checksum calculator/method:________________`;
   const doc = new jsPDF();
   doc
     .setFontSize(8.5)
