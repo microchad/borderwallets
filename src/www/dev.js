@@ -1,4 +1,4 @@
-const FILE_EXT = 'bweg',
+const FILE_EXT = 'json',
   ITERATIONS = 10000000;
 
 // Functions to open and close a modal
@@ -42,6 +42,8 @@ document.addEventListener('keydown', (event) => {
 const processingModal = document.getElementById('processingModal');
 const startProcessing = () => processingModal.classList.add('is-active');
 const endProcessing = () => processingModal.classList.remove('is-active');
+const updateProcessingStatus = (msg) =>
+  (document.getElementById('processingStatus').innerText = msg);
 
 const dropbox = document.getElementById('dropbox'),
   fileElem = document.getElementById('cryptoFileInput');
@@ -88,8 +90,15 @@ function drop(e) {
 const getFileExtension = (fileName) => fileName.split('.').at(-1);
 
 function handleFiles(files) {
+  updateProcessingStatus('Initialising...');
   startProcessing();
   const file = files[0];
+  console.log('file :>> ', file);
+  if (!file || !file.name) {
+    endProcessing();
+    alert('Error: Invalid file or missing file name');
+    return;
+  }
   const ext = getFileExtension(file.name);
   if (ext === FILE_EXT) {
     decryptFile(file);
@@ -205,7 +214,9 @@ const encryptFile = async (file) => {
   try {
     const keyMaterial = await getKeyMaterial();
     const salt = window.crypto.getRandomValues(new Uint8Array(32));
+    updateProcessingStatus('generating the key...');
     const key = await getKey(keyMaterial, salt);
+    updateProcessingStatus('encrypting...');
     const iv = window.crypto.getRandomValues(new Uint8Array(12));
     const encoder = new TextEncoder();
     const info = {
@@ -213,11 +224,11 @@ const encryptFile = async (file) => {
       size: file.size,
       type: file.type,
     };
-    encodedInfo = encoder.encode(JSON.stringify(info));
     const reader = new FileReader();
     reader.onload = async (e) => {
+      updateProcessingStatus('building encrypted file...');
       const fileAsURL = e.target.result;
-      encoded = encoder.encode(fileAsURL);
+      const encoded = encoder.encode(fileAsURL);
       const version = 1;
       const ciphertext = await window.crypto.subtle.encrypt(
         {
@@ -228,6 +239,7 @@ const encryptFile = async (file) => {
         encoded
       );
       const result = {
+        BWEG: true,
         version,
         info,
         iv: btoa(iv),
@@ -235,10 +247,14 @@ const encryptFile = async (file) => {
         iterations: ITERATIONS,
         ciphertext: btoa([...new Uint8Array(ciphertext)]),
       };
-      const fileURL = `data:application/json,${JSON.stringify(result)}`;
+      const fileURL = `data:application/json,${JSON.stringify(
+        result,
+        null,
+        2
+      )}`;
       const ext = getFileExtension(file.name);
       const fName = file.name.slice(0, file.name.length - (ext.length + 1));
-      saveFile(fileURL, `${fName}.${FILE_EXT}`);
+      saveFile(fileURL, `${fName}.BWEG.${FILE_EXT}`);
     };
     reader.readAsDataURL(file);
   } catch (e) {
@@ -251,29 +267,47 @@ const decryptFile = async (file) => {
   try {
     const reader = new FileReader();
     reader.onload = async (e) => {
-      if (!e.target.result) throw new Error('No file found!');
-      const data = JSON.parse(e.target.result);
-      if (data.version !== 1)
-        throw new Error('Only Version 1 is currently supported');
-      const salt = new Uint8Array(atob(data.salt).split(','));
-      const iv = new Uint8Array(atob(data.iv).split(','));
-      const ciphertext = new Uint8Array(atob(data.ciphertext).split(','))
-        .buffer;
-      const keyMaterial = await getKeyMaterial();
-      const key = await getKey(keyMaterial, salt);
-      const decrypted = await window.crypto.subtle.decrypt(
-        {
-          name: 'AES-GCM',
-          iv: iv,
-        },
-        key,
-        ciphertext
-      );
-      const decoder = new TextDecoder();
-      const decoded = decoder.decode(decrypted);
-      if (!decoded.startsWith(`data:${data.info.type};base64,`))
-        throw new Error('Failed to decrypt');
-      saveFile(decoded, data.info.name);
+      try {
+        if (!e.target.result) throw new Error('No file found!');
+        const data = JSON.parse(e.target.result);
+        if (data.version !== 1)
+          throw new Error('Only Version 1 is currently supported');
+        if (
+          !data.BWEG ||
+          !data.iv ||
+          !data.salt ||
+          !data.iterations ||
+          !data.ciphertext
+        ) {
+          updateProcessingStatus('file not encrypted');
+          encryptFile(file);
+          return;
+        }
+        const salt = new Uint8Array(atob(data.salt).split(','));
+        const iv = new Uint8Array(atob(data.iv).split(','));
+        const ciphertext = new Uint8Array(atob(data.ciphertext).split(','))
+          .buffer;
+        const keyMaterial = await getKeyMaterial();
+        updateProcessingStatus('generating the key...');
+        const key = await getKey(keyMaterial, salt);
+        updateProcessingStatus('decrypting...');
+        const decrypted = await window.crypto.subtle.decrypt(
+          {
+            name: 'AES-GCM',
+            iv: iv,
+          },
+          key,
+          ciphertext
+        );
+        const decoder = new TextDecoder();
+        const decoded = decoder.decode(decrypted);
+        if (!decoded.startsWith(`data:${data.info.type};base64,`))
+          throw new Error('Failed to decrypt');
+        saveFile(decoded, data.info.name);
+      } catch (e) {
+        endProcessing();
+        alert(e);
+      }
     };
 
     reader.readAsText(file);
@@ -315,6 +349,7 @@ regenerationInput.addEventListener('keyup', (event) => {
 });
 
 const saveFile = (fileURL, fileName) => {
+  updateProcessingStatus('saving file...');
   const a = document.createElement('a');
   a.style.display = 'none';
   a.href = fileURL;
