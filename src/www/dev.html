@@ -278,19 +278,42 @@
           <article class="message is-dark">
             <div class="message-body">
               <div class="content">
-                <p>Use the drop-down menu above to select the type of Entropy Grid you wish to generate. As a minimum,
-                  you will want to download two grids</p>
+                <p>Use the drop-down menu above to select the type of Grid and type of Entropy you wish to use for the
+                  grid.</p>
+
+                <p>As a minimum, you will want to download two grids:</p>
+
                 <ol>
-                  <li>the Pattern Grid (for mapping out/drawing your preferred 11 or 23-cell pattern or co-ordinates)
+                  <li>A Pattern Grid (for mapping out/drawing your preferred 11 or 23-cell patterns or co-ordinates)
                   </li>
-                  <li>a Word, Number, Index and/or Hex Grid</li>
+                  <li>An Entropy Grid, featuring either Words, Numbers, Indices and/or Hexadecimals.</li>
                 </ol>
-                <p>Most users will opt to use the Word Grid, which produces the first four letters of each BIP39 seed
-                  word in a
-                  randomised order using the Fisher-Yates Shuffle algorithm running locally in your browser. When you
-                  hit "GENERATE GRID",
-                  your chosen grid(s) - formatted in a 2-page PDF - will be sent to your downloads folder.</p>
-                <p>Entropy drop-down explainer TODO</p>
+
+                <p>
+                  Most users will opt for Word Grids, which produces the first four letters of each BIP39 seed word in a
+                  randomised order
+                  using the Fisher-Yates Shuffle algorithm running locally in your browser. When you hit "GENERATE
+                  GRID", your chosen
+                  grid(s) - formatted in a 2-page PDF - will be sent to your downloads folder.
+                </p>
+
+                <p>We offer users the ability to employ two types of entropy when generating their Entropy Grids -
+                  128-bit and 19580-bit:</p>
+
+                <ul>
+                  <li>
+                    The 128-bit option provides users with deterministic entropy grid reproducibility - i.e. the ability
+                    to backup grids
+                    in plain text as 12 words and regenerate later them using the Entropy Grid Generator.
+                  </li>
+                  <li>
+                    The 19580-bit option provides users with the maximum level of entropy. Because of the randomness of
+                    these grids,
+                    regeneration is not possible. These grids must therefore be saved and stored safely as there is no
+                    way to regenerate
+                    them later from backup words.
+                  </li>
+                </ul>
               </div>
             </div>
           </article>
@@ -336,7 +359,27 @@
           <article class="message is-dark">
             <div class="message-body">
               <div class="content">
-                <p>Info about regenerating grids</p>
+                <p>
+                  Entropy Grids generated using the Deterministic (128-bit entropy) option feature a 12-word
+                  Regeneration Phrase. This may
+                  seem counter-intuitive to the concept of Border Wallets, but the ability to save 12-words in plain
+                  text can serve an
+                  important backup and/or decoy purpose for some users.
+                </p>
+
+                <p>
+                  Whilst this Regeneration tab does permit users to enter their own passphrase to generate ENTROPIC GRID
+                  VARIANCE based on
+                  their own choice of words, this is strongly discouraged - humans are very bad at entropy and your
+                  funds may be at risk
+                  if you do this.
+                </p>
+
+                <p>
+                  NB: Entropy Grids which are generated using the Maximum Entropy (19580-bit) option are not able to be
+                  regenerated using
+                  similar words.
+                </p>
               </div>
             </div>
           </article>
@@ -368,7 +411,20 @@
           <article class="message is-dark">
             <div class="message-body">
               <div class="content">
-                <p>Info all about encrypting and decrypting files</p>
+                <p>
+                  Some users may want to save their Entropy Grids in digital format, e.g. USB keys, portable digital
+                  devices, secure cloud
+                  storage. As an extra layer of protection, we give those users the option to encrypt their Entropy
+                  Grids using their
+                  choice of preferred passphrase.
+                </p>
+
+                <p>
+                  Please ensure that you choose a suitably secure passphrase; whilst this passphrase is not used to
+                  generate entropy in
+                  the randomness of the Entropy Grid, it is used to secure your digital file, so please choose
+                  carefully.
+                </p>
               </div>
             </div>
           </article>

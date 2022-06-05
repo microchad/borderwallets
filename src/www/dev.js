@@ -322,6 +322,7 @@ const saveFile = (fileURL, fileName) => {
   a.download = fileName;
   document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
   endProcessing();
 };
 
