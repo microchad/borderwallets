@@ -1,6 +1,66 @@
 const FILE_EXT = 'json',
   ITERATIONS = 10000000;
 
+const finalWordPhraseInput = document.getElementById('finalWordPhraseInput');
+finalWordPhraseInput.oninput = (event) => {
+  const input = event.target;
+  const words = input.value
+    .trim()
+    .split(' ')
+    .filter((el) => el !== '');
+  const num = words.length;
+  let error = false;
+  if (num < 11 || num > 23 || num % 3 !== 2) error = true;
+  else
+    words.forEach((w) => {
+      if (!wordList.includes(w)) error = true;
+    });
+  if (error) {
+    input.classList.add('is-danger');
+    input.classList.remove('is-success');
+    document.getElementById('finalWordOutput').innerText = '';
+  } else {
+    input.classList.add('is-success');
+    input.classList.remove('is-danger');
+    generateFinalWord();
+  }
+};
+
+const deriveChecksumBits = async (entropyBuffer) => {
+  const ENT = entropyBuffer.length * 8;
+  const CS = ENT / 32;
+  const hash = await crypto.subtle.digest('SHA-256', entropyBuffer);
+  return bytesToBinary([...new Uint8Array(hash)]).slice(0, CS);
+};
+
+const generateFinalWord = async () => {
+  if (!finalWordPhraseInput.classList.contains('is-success')) return;
+  const words = finalWordPhraseInput.value
+    .trim()
+    .split(' ')
+    .filter((el) => el !== '');
+  const wordIndexes = words.map((w) => wordList.indexOf(w));
+  const numWords = words.length;
+  const entLength = 11 - (numWords + 1) / 3;
+  const entBits = crypto
+    .getRandomValues(new Uint8Array(1))[0]
+    .toString(2)
+    .slice(8 - entLength);
+  const bin =
+    wordIndexes.map((n) => n.toString(2).padStart(11, '0')).join('') + entBits;
+  const binBytes = bin.match(/[0-1]{8}/g);
+  const arr = binBytes.map((b) => parseInt(b, 2));
+  const buf = new Uint8Array(arr);
+  const checkSumBits = await deriveChecksumBits(buf);
+  const lastWordBits = entBits + checkSumBits;
+  const lastWord = wordList[parseInt(lastWordBits, 2)];
+  document.getElementById('finalWordOutput').innerText = wordList.includes(
+    lastWord
+  )
+    ? lastWord
+    : '';
+};
+
 // Functions to open and close a modal
 function openModal($el) {
   $el.classList.add('is-active');
@@ -318,7 +378,7 @@ const decryptFile = async (file) => {
 };
 
 const regenerationInput = document.getElementById('regenerationPhraseInput');
-regenerationInput.addEventListener('keydown', (event) => {
+const enterPress = (event) => {
   const e = event || window.event;
   const selection = window.getSelection();
   if (e.keyCode === 13) {
@@ -326,17 +386,20 @@ regenerationInput.addEventListener('keydown', (event) => {
     selection.collapseToEnd();
     return false;
   }
-});
-regenerationInput.addEventListener('keyup', (event) => {
+};
+const addSuggestion = (event) => {
   const e = event || window.event;
   const selection = window.getSelection();
   if (e.keyCode === 13 || e.keyCode === 8 || e.keyCode === 46) {
     // Enter / backspace / delete key
     return false;
   }
-  const inputElement = document.getElementById('regenerationPhraseInput');
+  const inputElement = e.target;
   const userInput = `${inputElement.value}`;
-  const wordArray = userInput.split(' ');
+  const wordArray = userInput
+    .trim()
+    .split(' ')
+    .filter((el) => el !== '');
   const lastWord = wordArray[wordArray.length - 1];
   const found = wordList.find((s) => s.startsWith(lastWord));
   if (lastWord === found || found === undefined) return false;
@@ -346,7 +409,11 @@ regenerationInput.addEventListener('keyup', (event) => {
   for (let i = 0; i < missingLetters.length; i++) {
     selection.modify('extend', 'backward', 'character');
   }
-});
+};
+regenerationInput.addEventListener('keydown', enterPress);
+regenerationInput.addEventListener('keyup', addSuggestion);
+finalWordPhraseInput.addEventListener('keydown', enterPress);
+finalWordPhraseInput.addEventListener('keyup', addSuggestion);
 
 const saveFile = (fileURL, fileName) => {
   updateProcessingStatus('saving file...');

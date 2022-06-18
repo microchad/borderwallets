@@ -204,6 +204,7 @@
         <div id="sectionTabs" class="tabs is-toggle is-fullwidth">
           <ul>
             <li id="generateTabBtn" class="is-active"><a>Generate</a></li>
+            <li id="finalTabBtn"><a>Final Word</a></li>
             <li id="regenerateTabBtn"><a>Regenerate</a></li>
             <li id="encryptionTabBtn"><a>Encryption</a></li>
           </ul>
@@ -336,7 +337,7 @@
             <div class="field-body">
               <div class="field">
                 <div class="control">
-                  <button class="button is-black" onclick="regenerateSeedGrid(this)">Regenerate Grid</button>
+                  <button class="button is-black" onclick="regenerateSeedGrid(this)">REGENERATE GRID</button>
                 </div>
               </div>
             </div>
@@ -358,7 +359,8 @@
                 </p>
 
                 <p>
-                  NB: Entropy Grids which are generated using the Maximum Entropy (19580-bit) option are not able to be
+                  <strong>NB:</strong> Entropy Grids which are generated using the Maximum Entropy (19580-bit) option
+                  are not able to be
                   regenerated using
                   similar words (and therefore do not include a Regeneration Phrase when produced).
                 </p>
@@ -406,6 +408,30 @@
                   generate entropy in
                   the randomness of the Entropy Grid, it is used to secure your digital file, so please choose
                   carefully.
+                </p>
+              </div>
+            </div>
+          </article>
+        </section>
+        <section class="tab-section is-hidden" id="final">
+          <div class="field">
+            <div class="control">
+              <input id="finalWordPhraseInput" class="input is-rounded" type="text"
+                placeholder="Enter your 11/23 words here">
+            </div>
+          </div>
+          <div class="notification is-black is-light">
+            Your final word is:
+            <pre><span id="finalWordOutput"></span></pre>
+          </div>
+          <article class="message is-dark">
+            <div class="message-body">
+              <div class="content">
+                <p>
+                  Some text explaining the final word generator
+                </p>
+                <p>
+                  Another paragraph of text
                 </p>
               </div>
             </div>
