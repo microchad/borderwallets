@@ -7,7 +7,8 @@
     "dev": "nodemon ./src/server.js",
     "build": "node ./src/build.js",
     "git": "npm run build && git pull && git add . && git commit -m \"$MSG\" && git push",
-    "sign": "echo \"sha256sum borderwallets.html\n $(sha256sum borderwallets.html)\" | gpg --clear-sign -u superphatarrow@pm.me --armor",
+    "spa-release": "sha256sum borderwallets.html > ./releases/borderwallets.txt && gpg --sign --detach-sign --armor -u superphatarrow@pm.me ./releases/borderwallets.txt | gh release create $V  -F ./releases/notes.md './borderwallets.html#Entropy Grid Generator DOWNLOAD' ./releases/borderwallets.txt ./releases/borderwallets.txt.asc",
+    "mtc-release": "sha256sum borderwallets.html > ./releases/borderwallets.txt && gpg --sign --detach-sign --armor -u mtcfyi@pm.me ./releases/borderwallets.txt | gh release create $V  -F ./releases/notes.md './borderwallets.html#Entropy Grid Generator DOWNLOAD' ./releases/borderwallets.txt ./releases/borderwallets.txt.asc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

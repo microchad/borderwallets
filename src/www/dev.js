@@ -1,8 +1,124 @@
 const FILE_EXT = 'json',
   ITERATIONS = 10000000;
 
+const regenerateTwelveWords = document.querySelectorAll(
+  '.regeneration-12-input'
+);
+const finalTwelveWords = document.querySelectorAll('.final-word-12-input');
+const final24Words = document.querySelectorAll('.final-word-24-input');
+
+document.querySelectorAll('input[name="regenerateRadio"]').forEach((rad) => {
+  rad.addEventListener('change', () => {
+    regenerationPhraseInput.value = '';
+    regenerateTwelveWords.forEach((i) => {
+      i.value = '';
+    });
+    document
+      .querySelectorAll('.regenerate-option-sections')
+      .forEach((section) => {
+        section.classList.toggle('is-hidden');
+      });
+  });
+});
+
+document.querySelectorAll('input[name="finalWordRadio"]').forEach((rad) => {
+  rad.addEventListener('change', () => {
+    finalTwelveWords.forEach((i) => {
+      i.value = '';
+    });
+    final24Words.forEach((i) => {
+      i.value = '';
+    });
+    document
+      .querySelectorAll('.final-word-input-section')
+      .forEach((section) => {
+        section.classList.toggle('is-hidden');
+      });
+    fillLuckyNumbers();
+  });
+});
+
+const getLuckyNumber = (bits) =>
+  parseInt(
+    crypto
+      .getRandomValues(new Uint8Array(1))[0]
+      .toString(2)
+      .padStart(8, '0')
+      .slice(8 - bits),
+    2
+  );
+
+const fillLuckyNumbers = () => {
+  [12, 24].forEach((n) => {
+    const entBits = 11 - n / 3;
+    document.getElementById(`finalRandom${n}`).value =
+      getLuckyNumber(entBits) + 1;
+  });
+};
+fillLuckyNumbers();
+
+const finalRandom12 = document.getElementById('finalRandom12');
+const finalRandom24 = document.getElementById('finalRandom24');
+
+[finalRandom12, finalRandom24].forEach((inp) => {
+  inp.oninput = () => {
+    try {
+      if (inp.value === '') return;
+      const n = parseInt(inp.value);
+      const max = parseInt(inp.max);
+      const min = parseInt(inp.min);
+      if (isNaN(n))
+        throw new TypeError('Final Word Recovery Number must be a number!');
+      if (n > max)
+        throw new RangeError(
+          'Final Word Recovery Number must be less than or equal to ' + max
+        );
+      if (n < min)
+        throw new RangeError(
+          'Final Word Recovery Number must be greater than or equal to ' + min
+        );
+      generateFinalWord();
+    } catch (error) {
+      console.error(error);
+      fillLuckyNumbers();
+    }
+  };
+});
+
+const calcPassphrasePotentialEntropy = (pwd) => {
+  const len = pwd.length;
+  let charSet = 0;
+  const lowerCase = /[a-z]/;
+  const upperCase = /[A-Z]/;
+  const space = /[\s]/;
+  const digit = /[\d]/;
+  const symbolChar = /[`!"$%^&*()_\+-\=\{\}\[\]:;@'~#|\\<>,.?/]/;
+  if (lowerCase.test(pwd)) charSet += 26;
+  if (upperCase.test(pwd)) charSet += 26;
+  if (space.test(pwd)) charSet += 1;
+  if (digit.test(pwd)) charSet += 10;
+  if (symbolChar.test(pwd)) charSet += 32;
+  const combos = BigInt(charSet) ** BigInt(len);
+  const ent = BigInt(combos.toString(2).length - 1);
+  return parseInt(ent);
+};
+
+const regenerationPhraseInput = document.querySelector(
+  '#regenerationPhraseInput'
+);
+regenerationPhraseInput.oninput = () => {
+  const ent = calcPassphrasePotentialEntropy(
+    normalizeString(regenerationPhraseInput.value)
+  );
+  const ppe = document.querySelector('#potentialEntropy');
+  ppe.innerText = `${ent} ${ent === 1 ? 'bit' : 'bits'}`;
+  const enough = ent >= 128;
+  ppe.classList.toggle('is-danger', !enough);
+  ppe.classList.toggle('is-success', enough);
+};
+
 const finalWordPhraseInput = document.getElementById('finalWordPhraseInput');
-finalWordPhraseInput.oninput = (event) => {
+/*finalWordPhraseInput.oninput = (event) => {
   const input = event.target;
   const words = input.value
     .trim()
@@ -24,7 +140,150 @@ finalWordPhraseInput.oninput = (event) => {
     input.classList.remove('is-danger');
     generateFinalWord();
   }
+};*/
+
+// Autocomplete
+const currentAuto = {
+  input: null,
+  focus: -1,
+  term: '',
+  section: null,
 };
+
+const clearAutocompleteItems = (el) => {
+  document.querySelectorAll('.autocomplete-items').forEach((item) => {
+    if (el !== item && el !== currentAuto.input)
+      item.parentNode.removeChild(item);
+  });
+};
+
+const autocompletePositionUpdate = () => {
+  // check we have a list
+  const autocompleteContainer = document.querySelector('.autocomplete-items');
+  if (!autocompleteContainer || !currentAuto.input) return;
+  const rect = currentAuto.input.getBoundingClientRect();
+  // position the list
+  autocompleteContainer.style.width = rect.width + 'px';
+  autocompleteContainer.style.top = 3 + rect.bottom + scrollY + 'px';
+  autocompleteContainer.style.left = rect.left + scrollX + 'px';
+};
+
+const addAutocompleteActive = () => {
+  removeAutocompleteActive();
+  const suggestions = document.querySelectorAll('.autocomplete-items>button');
+  if (!suggestions || !suggestions.length) return;
+  if (currentAuto.focus >= suggestions.length) currentAuto.focus = 0;
+  if (currentAuto.focus < 0) currentAuto.focus = suggestions.length - 1;
+  suggestions[currentAuto.focus].classList.add('is-hovered');
+};
+
+const removeAutocompleteActive = () => {
+  document
+    .querySelectorAll('.autocomplete-items>button')
+    .forEach((btn) => btn.classList.remove('is-hovered'));
+};
+
+const focusOnNextWord = () => {
+  const inputs = [...document.querySelectorAll('input.autocomplete')];
+  const i = inputs.indexOf(currentAuto.input);
+  inputs[i + 1].focus();
+  generateFinalWord();
+};
+
+const keyPressAutocompleteHandler = (e) => {
+  generateFinalWord();
+  let suggestionList = document.querySelectorAll('.autocomplete-items>button');
+  if (!suggestionList.length) {
+    if (
+      e.keyCode == 13 &&
+      wordList.includes(normalizeString(currentAuto?.input?.value))
+    ) {
+      e.preventDefault();
+      focusOnNextWord();
+    }
+    return;
+  }
+  if (e.keyCode == 40) {
+    /*If the arrow DOWN key is pressed,
+          increase the currentAuto.focus variable:*/
+    currentAuto.focus++;
+    /*and and make the current item more visible:*/
+    addAutocompleteActive();
+  } else if (e.keyCode == 38) {
+    //up
+    /*If the arrow UP key is pressed,
+          decrease the currentAuto.focus variable:*/
+    currentAuto.focus--;
+    /*and and make the current item more visible:*/
+    addAutocompleteActive();
+  } else if (e.keyCode == 13) {
+    /*If the ENTER key is pressed, prevent the form from being submitted,*/
+    e.preventDefault();
+    if (currentAuto.focus > -1) {
+      /*and simulate a click on the "active" item:*/
+      if (suggestionList) suggestionList[currentAuto.focus].click();
+    }
+  }
+};
+
+const autocompleteSuggest = (input) => {
+  const searchText = normalizeString(input.value.toLowerCase());
+  if (searchText === currentAuto.term && currentAuto.input === input) return;
+  if (currentAuto.input !== input) currentAuto.focus = -1;
+  if (input.classList.contains('final-word')) {
+    currentAuto.section = input.classList.contains('final-word-24-input')
+      ? 'final-word-24-input'
+      : 'final-word-12-input';
+  } else {
+    currentAuto.section = 'regeneration-12-input';
+  }
+  currentAuto.input = input;
+  currentAuto.term = searchText;
+  clearAutocompleteItems();
+  if (searchText === '') return;
+  const searchResults = [
+    ...new Set(
+      wordList
+        .filter((word) => word.startsWith(searchText))
+        .concat(wordList.filter((word) => word.includes(searchText)))
+    ),
+  ].slice(0, 5);
+  if (searchResults.length === 1 && searchResults[0] === searchText) {
+    // user has found their word
+    clearAutocompleteItems();
+    generateFinalWord();
+    return;
+  }
+  const resultsContainer = document.createElement('DIV');
+  resultsContainer.setAttribute('class', 'autocomplete-items box');
+  document.body.appendChild(resultsContainer);
+  autocompletePositionUpdate();
+  searchResults.forEach((word) => {
+    const wordBtn = document.createElement('button');
+    wordBtn.setAttribute(
+      'class',
+      'button is-fullwidth is-black is-outlined is-rounded mb-1'
+    );
+    wordBtn.innerText = word;
+    wordBtn.dataset.word = word;
+    wordBtn.onclick = function () {
+      currentAuto.input.value = this.dataset.word;
+      clearAutocompleteItems();
+      focusOnNextWord();
+    };
+    resultsContainer.appendChild(wordBtn);
+  });
+  if (searchResults.length === 1) {
+    currentAuto.focus = 0;
+    addAutocompleteActive();
+  }
+};
+
+document
+  .querySelectorAll('.autocomplete')
+  .forEach((input) =>
+    input.addEventListener('keydown', keyPressAutocompleteHandler)
+  );
 
 const deriveChecksumBits = async (entropyBuffer) => {
   const ENT = entropyBuffer.length * 8;
@@ -34,17 +293,39 @@ const deriveChecksumBits = async (entropyBuffer) => {
 };
 
 const generateFinalWord = async () => {
-  if (!finalWordPhraseInput.classList.contains('is-success')) return;
-  const words = finalWordPhraseInput.value
-    .trim()
-    .split(' ')
-    .filter((el) => el !== '');
+  if (!currentAuto.section || currentAuto.section === 'regeneration-12-input')
+    return;
+  const inputs = [...document.querySelectorAll(`.${currentAuto.section}`)];
+  const words = inputs
+    .map((i) => normalizeString(i.value.toLowerCase()))
+    .slice(0, -1);
+  const finalWord = inputs[inputs.length - 1];
+  if (words.includes('')) {
+    console.log('words :>> ', words);
+    finalWord.value = '';
+    return;
+  }
   const wordIndexes = words.map((w) => wordList.indexOf(w));
+  let wordsAreWrong = false;
+  wordIndexes.forEach((wi, i) => {
+    if (wi === -1) wordsAreWrong = true;
+    inputs[i].classList.toggle('is-danger', wi === -1);
+  });
+  if (wordsAreWrong) {
+    finalWord.value = '';
+    return;
+  }
   const numWords = words.length;
   const entLength = 11 - (numWords + 1) / 3;
-  const entBits = crypto
-    .getRandomValues(new Uint8Array(1))[0]
+  const entBits = (
+    parseInt(
+      document.getElementById(
+        `finalRandom${currentAuto.section.includes('1') ? '12' : '24'}`
+      ).value
+    ) - 1
+  )
     .toString(2)
+    .padStart(8, '0')
     .slice(8 - entLength);
   const bin =
     wordIndexes.map((n) => n.toString(2).padStart(11, '0')).join('') + entBits;
@@ -54,11 +335,7 @@ const generateFinalWord = async () => {
   const checkSumBits = await deriveChecksumBits(buf);
   const lastWordBits = entBits + checkSumBits;
   const lastWord = wordList[parseInt(lastWordBits, 2)];
-  document.getElementById('finalWordOutput').innerText = wordList.includes(
-    lastWord
-  )
-    ? lastWord
-    : '';
+  finalWord.value = wordList.includes(lastWord) ? lastWord : '';
 };
 
 // Functions to open and close a modal
@@ -98,6 +375,8 @@ document.addEventListener('keydown', (event) => {
     closeAllModals();
   }
 });
+
+const normalizeString = (str) => str.trim().normalize('NFKD');
 
 const processingModal = document.getElementById('processingModal');
 const startProcessing = () => processingModal.classList.add('is-active');
@@ -192,7 +471,7 @@ password.addEventListener('input', function () {
   const passwordStrengthText = document.getElementById(
     'password-strength-text'
   );
-  const val = password.value;
+  const val = normalizeString(password.value);
   const result = zxcvbn(val);
 
   // Update the password strength meter
@@ -223,24 +502,27 @@ password.addEventListener('input', function () {
 const checkPassphrasesMatch = () => {
   passwordConfirm.classList.toggle(
     'is-danger',
-    password.value !== passwordConfirm.value
+    normalizeString(password.value) !== normalizeString(passwordConfirm.value)
   );
   password.classList.toggle(
     'is-success',
-    password.value === passwordConfirm.value
+    normalizeString(password.value) === normalizeString(passwordConfirm.value)
   );
   passwordConfirm.classList.toggle(
     'is-success',
-    password.value === passwordConfirm.value
+    normalizeString(password.value) === normalizeString(passwordConfirm.value)
   );
 };
 document.querySelectorAll('.crypto-passphrase-inputs').forEach((input) => {
   input.addEventListener('input', checkPassphrasesMatch);
 });
 function getKeyMaterial() {
-  const passwordValue = document.getElementById('passphrase').value;
-  const passwordValueConfirm =
-    document.getElementById('passphraseConfirm').value;
+  const passwordValue = normalizeString(
+    document.getElementById('passphrase').value
+  );
+  const passwordValueConfirm = normalizeString(
+    document.getElementById('passphraseConfirm').value
+  );
   if (!passwordValue) throw new Error('Passphrase required!');
   if (passwordValue !== passwordValueConfirm)
     throw new Error('Passphrase inputs do not match!');
@@ -376,8 +658,6 @@ const decryptFile = async (file) => {
     alert(e);
   }
 };
-
-const regenerationInput = document.getElementById('regenerationPhraseInput');
 const enterPress = (event) => {
   const e = event || window.event;
   const selection = window.getSelection();
@@ -387,33 +667,6 @@ const enterPress = (event) => {
     return false;
   }
 };
-const addSuggestion = (event) => {
-  const e = event || window.event;
-  const selection = window.getSelection();
-  if (e.keyCode === 13 || e.keyCode === 8 || e.keyCode === 46) {
-    // Enter / backspace / delete key
-    return false;
-  }
-  const inputElement = e.target;
-  const userInput = `${inputElement.value}`;
-  const wordArray = userInput
-    .trim()
-    .split(' ')
-    .filter((el) => el !== '');
-  const lastWord = wordArray[wordArray.length - 1];
-  const found = wordList.find((s) => s.startsWith(lastWord));
-  if (lastWord === found || found === undefined) return false;
-  const missingLetters = found.slice(lastWord.length) + ' ';
-  const suggestedInput = userInput + missingLetters;
-  inputElement.value = suggestedInput;
-  for (let i = 0; i < missingLetters.length; i++) {
-    selection.modify('extend', 'backward', 'character');
-  }
-};
-regenerationInput.addEventListener('keydown', enterPress);
-regenerationInput.addEventListener('keyup', addSuggestion);
-finalWordPhraseInput.addEventListener('keydown', enterPress);
-finalWordPhraseInput.addEventListener('keyup', addSuggestion);
 
 const saveFile = (fileURL, fileName) => {
   updateProcessingStatus('saving file...');
@@ -501,9 +754,12 @@ const isGoodMnemonic = (mnemonic) => {
 };
 
 const regenerateSeedGrid = (_event, indemnified) => {
-  const mnemonic = document
-    .getElementById('regenerationPhraseInput')
-    .value.trim();
+  const mnemonic =
+    normalizeString(regenerationPhraseInput.value) ||
+    [...regenerateTwelveWords]
+      .map((el) => normalizeString(el.toLowerCase()))
+      .join(' ');
+  if (!mnemonic || calcPassphrasePotentialEntropy(mnemonic) < 128) return;
   if (!isGoodMnemonic(mnemonic) && !indemnified) {
     document
       .querySelector('#regenerationConfirmation')
@@ -635,16 +891,20 @@ let element;
 const words = [
   'Are you ready to begin, Satoshi?',
   'Visit borderwallets.com for instructions.',
-  'Dont trust, verify.',
+  "Don't trust, verify.",
   'Not your keys, not your coins.',
 ];
 /* cspell: enable */
+
+function displayTypedText(txt = '') {
+  element.innerHTML = `~ ${txt}_`;
+}
 
 function type(words, index = 0) {
   (function writer(i) {
     var string = words[index];
     if (string.length <= i++) {
-      element.innerText = string;
+      displayTypedText(string);
       if (words[index] != words[words.length - 1]) {
         setTimeout(function () {
           reverseType(words, index);
@@ -656,7 +916,7 @@ function type(words, index = 0) {
       }
       return;
     }
-    element.innerText = string.substring(0, i);
+    displayTypedText(string.substring(0, i));
     var rand = Math.floor(Math.random() * 100) + 140;
     setTimeout(function () {
       writer(i);
@@ -668,7 +928,7 @@ function reverseType(words, index = 0) {
   (function writer(i) {
     var string = words[index];
     if (string.length <= i++) {
-      element.innerText = string;
+      displayTypedText(string);
       if (words[index] != words[words.length - 1]) {
         type(words, index + 1);
       } else {
@@ -676,7 +936,7 @@ function reverseType(words, index = 0) {
       }
       return;
     }
-    element.innerText = string.substring(0, string.length - i);
+    displayTypedText(string.substring(0, string.length - i));
     var rand = Math.floor(Math.random() * 100) + 140;
     setTimeout(function () {
       writer(i);

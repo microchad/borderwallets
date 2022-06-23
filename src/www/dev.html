@@ -133,6 +133,12 @@
       padding: 0 .25em;
       margin-top: 1em;
     }
+
+    .autocomplete-items {
+      position: absolute;
+      z-index: 95;
+      border: 1px solid hsl(0, 0%, 86%);
+    }
   </style>
   <link rel="stylesheet" href="dev.css">
   <link rel="shortcut icon"
@@ -201,7 +207,7 @@
   <section class="section">
     <div class="container">
       <div class="box">
-        <div id="sectionTabs" class="tabs is-toggle is-fullwidth">
+        <div id="sectionTabs" class="tabs  is-toggle is-toggle-rounded is-fullwidth">
           <ul>
             <li id="generateTabBtn" class="is-active"><a>Generate</a></li>
             <li id="finalTabBtn"><a>Final Word</a></li>
@@ -304,11 +310,471 @@
             </div>
           </article>
         </section>
+        <section class="tab-section is-hidden" id="final">
+          <div class="field">
+            <div class="control">
+              <label class="radio">
+                <input type="radio" name="finalWordRadio">
+                12 Words
+              </label>
+              <label class="radio">
+                <input type="radio" name="finalWordRadio" checked>
+                24 words
+              </label>
+            </div>
+          </div>
+          <div id="finalWordInputSection12" class="final-word-input-section is-hidden">
+            <div class="field">
+              <label class="label">12th Word Recovery Number</label>
+              <div class="control">
+                <input class="input is-rounded" type="number" value="1" min="1" max="128" id="finalRandom12">
+              </div>
+            </div>
+            <div class="field">
+              <label class="label">Input Your First 11 Seed Words</label>
+              <div class="control">
+                <input class="input is-hidden" disabled type="number">
+              </div>
+            </div>
+            <div class="columns">
+              <div class="column is-4">
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-12-input input is-rounded" type="text" placeholder="1">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-12-input input is-rounded" type="text" placeholder="2">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-12-input input is-rounded" type="text" placeholder="3">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-12-input input is-rounded" type="text" placeholder="4">
+                  </div>
+                </div>
+              </div>
+              <div class="column is-4">
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-12-input input is-rounded" type="text" placeholder="5">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-12-input input is-rounded" type="text" placeholder="6">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-12-input input is-rounded" type="text" placeholder="7">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-12-input input is-rounded" type="text" placeholder="8">
+                  </div>
+                </div>
+              </div>
+              <div class="column is-4">
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-12-input input is-rounded" type="text" placeholder="9">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-12-input input is-rounded" type="text" placeholder="10">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-12-input input is-rounded" type="text" placeholder="11">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-12-input input is-rounded is-dark" type="text" disabled
+                      placeholder="12">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="finalWordInputSection24" class="final-word-input-section">
+            <div class="field">
+              <label class="label">24th Word Recovery Number</label>
+              <div class="control">
+                <input class="input is-rounded" type="number" value="1" min="1" max="8" id="finalRandom24">
+              </div>
+            </div>
+            <div class="field">
+              <label class="label">Input Your First 23 Seed Words</label>
+              <div class="control">
+                <input class="input is-hidden" disabled type="number">
+              </div>
+            </div>
+            <div class="columns">
+              <div class="column is-4">
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="1">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="2">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="3">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="4">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="5">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="6">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="7">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="8">
+                  </div>
+                </div>
+              </div>
+              <div class="column is-4">
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="9">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="10">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="11">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="12">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="13">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="14">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="15">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="16">
+                  </div>
+                </div>
+              </div>
+              <div class="column is-4">
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="17">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="18">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="19">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="20">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="21">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="22">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded" type="text" placeholder="23">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete final-word final-word-24-input input is-rounded is-dark" type="text" disabled
+                      placeholder="24">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <article class="message is-dark">
+            <div class="message-body">
+              <div class="content">
+                <p>
+                  Some text explaining the final word generator
+                </p>
+                <p>
+                  Another paragraph of text
+                </p>
+              </div>
+            </div>
+          </article>
+        </section>
         <section class="tab-section is-hidden" id="regenerate">
           <div class="field">
             <div class="control">
-              <input id="regenerationPhraseInput" class="input is-rounded" type="text"
-                placeholder="Enter your Regeneration Phrase">
+              <label class="radio">
+                <input type="radio" name="regenerateRadio" checked>
+                12 Words (Highly recommended)
+              </label>
+              <label class="radio">
+                <input type="radio" name="regenerateRadio">
+                Own Passphrase (Advanced)
+              </label>
+            </div>
+          </div>
+          <div id="regenerateTwelve" class="regenerate-option-sections">
+            <div class="columns">
+              <div class="column is-4">
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete regeneration-12-input input is-rounded" type="text" placeholder="1">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete regeneration-12-input input is-rounded" type="text" placeholder="2">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete regeneration-12-input input is-rounded" type="text" placeholder="3">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete regeneration-12-input input is-rounded" type="text" placeholder="4">
+                  </div>
+                </div>
+              </div>
+              <div class="column is-4">
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete regeneration-12-input input is-rounded" type="text" placeholder="5">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete regeneration-12-input input is-rounded" type="text" placeholder="6">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete regeneration-12-input input is-rounded" type="text" placeholder="7">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete regeneration-12-input input is-rounded" type="text" placeholder="8">
+                  </div>
+                </div>
+              </div>
+              <div class="column is-4">
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete regeneration-12-input input is-rounded" type="text" placeholder="9">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete regeneration-12-input input is-rounded" type="text" placeholder="10">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete regeneration-12-input input is-rounded" type="text" placeholder="11">
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="control">
+                    <input onkeyup="autocompleteSuggest(this)"
+                      class="autocomplete regeneration-12-input input is-rounded" type="text" placeholder="12">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <br>
+          <div id="regenerateOwn" class="regenerate-option-sections is-hidden">
+            <div class="notification is-danger">
+              <button class="delete"
+                onclick="{const warn = this.parentElement; warn.parentElement.removeChild(warn);}"></button>
+              <div class="content">
+                <h4 style="color: currentColor;">WARNING!</h4>
+                <p><strong>Here be dragons!</strong></p>
+                <p>
+                  This is an advanced feature and your funds may be at risk if this is used
+                  improperly!
+                </p>
+                <p>
+                  You have chosen to generate an Entropy Grid from your own passphrase. Entropy is about
+                  <strong>RANDOMNESS!</strong>
+                  There
+                  is no
+                  randomness involved in creating your Pattern Grid as you need to make a pattern that is not random and
+                  easy to remember.
+                  This means that all the entropy for your seed should come from the Entropy Grid (hence the name!)
+                </p>
+                <p>
+                  Cryptographers highly recommend (perhaps even insist on) a minimum of 128-bits of entropy to generate
+                  Bitcoin seeds. We
+                  have included a tool that will calculate the <strong>minimum potential entropy</strong> of your
+                  passphrase, based on
+                  the
+                  length and set
+                  of characters used. This is <strong>NOT</strong> a measure of the entropy in your passphrase and how
+                  you generate
+                  randomness is up to you
+                  when using this advanced feature.
+                </p>
+                <p>
+                  We recommend the <a href="https://www.eff.org/dice">EFF's Diceware Long Word List</a> if you wish to
+                  do this
+                  yourself. Note that
+                  you will need to generate a 10 word passphrase to have at least 128 bits of entropy. Our built in
+                  solution uses 12 words
+                  from Bitcoin's, much shorter, BIP39 word list from 128 bits of entropy in the same way that wallets
+                  make seeds
+                </p>
+                <p>
+                  If you generate your own 128-bit entropy and input your passphrase here, the tool may say that your
+                  potential entropy is
+                  higher. You can safely ignore it in this case, safe in the knowledge that you have generated
+                  sufficient entropy on your
+                  own.
+                </p>
+                <p>
+                  Note well that the tool will not generate an Entropy Grid if the potential entropy of your passphrase
+                  is
+                  below 128 bits.
+                  This is for your own protection and for the integrity of the Border Wallets concept as a whole.
+                </p>
+                <p>
+                  If you generate your own 128-bit entropy and input your passphrase here, the tool may say that your
+                  potential entropy is
+                  higher. You can safely ignore it in this case, safe in the knowledge that you have generated
+                  sufficient
+                  entropy on your
+                  own.
+                </p>
+              </div>
+            </div>
+            <div class="field">
+              <div class="control">
+                <input id="regenerationPhraseInput" class="input is-rounded" type="text"
+                  placeholder="Enter your own Regeneration Phrase">
+              </div>
+            </div>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Minimum Potential Entropy</label>
+              </div>
+              <div class="field-body">
+                <div class="field is-narrow">
+                  <div class="control">
+                    <span class="tag is-danger is-medium" id="potentialEntropy">0 bit</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="field is-horizontal">
@@ -354,8 +820,10 @@
                 </p>
 
                 <p>
-                  Whilst this Regeneration tab does allow users to enter their own passphrase to generate (and thus regenerate) grid entropy based on
-                  their own choice of words, this is strongly discouraged - humans are very bad at entropy and your funds may be at risk if you do this.
+                  Whilst this Regeneration tab does allow users to enter their own passphrase to generate (and thus
+                  regenerate) grid entropy based on
+                  their own choice of words, this is strongly discouraged - humans are very bad at entropy and your
+                  funds may be at risk if you do this.
                 </p>
 
                 <p>
@@ -413,30 +881,6 @@
             </div>
           </article>
         </section>
-        <section class="tab-section is-hidden" id="final">
-          <div class="field">
-            <div class="control">
-              <input id="finalWordPhraseInput" class="input is-rounded" type="text"
-                placeholder="Enter your 11/23 words here">
-            </div>
-          </div>
-          <div class="notification is-black is-light">
-            Your final word is:
-            <pre><span id="finalWordOutput"></span></pre>
-          </div>
-          <article class="message is-dark">
-            <div class="message-body">
-              <div class="content">
-                <p>
-                  Some text explaining the final word generator
-                </p>
-                <p>
-                  Another paragraph of text
-                </p>
-              </div>
-            </div>
-          </article>
-        </section>
       </div>
     </div>
     <br>
@@ -447,8 +891,10 @@
     <div class="container">
       <div class="block">
         <div class="tag is-dark is-medium"
-          style="font-family: monospace; width: 100%; justify-content: flex-start; color: hsl(171, 100%, 41%); height: 6em;">
-          &nbsp;<span id="text"></span><span class="blinking-cursor">&#9608;</span></div>
+          style="font-family: monospace; width: 100%; color: hsl(171, 100%, 41%); height: 10em;  display: block; padding: 1rem; overflow-wrap: break-word;">
+          <div id="text" style="overflow-wrap: break-word;
+  white-space: break-spaces;"></div>
+        </div>
       </div>
     </div>
   </section>
@@ -465,7 +911,8 @@
             This Regeneration Phrase was not generated by this tool. Please check it for errors before continuing.
           </p>
           <p>
-            If you're trying to create a grid from a low entropy Regeneration Phrase, your funds could be at risk.
+            If you're trying to create a grid from a self-generated entropy Regeneration Phrase, your funds could be at
+            risk if not enough real entropy was used.
           </p>
           <p>
             Are you sure you want to continue?
