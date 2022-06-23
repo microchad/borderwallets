@@ -186,7 +186,7 @@ const removeAutocompleteActive = () => {
 const focusOnNextWord = () => {
   const inputs = [...document.querySelectorAll('input.autocomplete')];
   const i = inputs.indexOf(currentAuto.input);
-  inputs[i + 1].focus();
+  inputs[i + 1]?.focus() || document.activeElement.blur();
   generateFinalWord();
 };
 
@@ -757,7 +757,7 @@ const regenerateSeedGrid = (_event, indemnified) => {
   const mnemonic =
     normalizeString(regenerationPhraseInput.value) ||
     [...regenerateTwelveWords]
-      .map((el) => normalizeString(el.toLowerCase()))
+      .map((el) => normalizeString(el.value.toLowerCase()))
       .join(' ');
   if (!mnemonic || calcPassphrasePotentialEntropy(mnemonic) < 128) return;
   if (!isGoodMnemonic(mnemonic) && !indemnified) {
