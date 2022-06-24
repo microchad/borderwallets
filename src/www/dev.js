@@ -186,7 +186,9 @@ const removeAutocompleteActive = () => {
 const focusOnNextWord = () => {
   const inputs = [...document.querySelectorAll('input.autocomplete')];
   const i = inputs.indexOf(currentAuto.input);
-  inputs[i + 1]?.focus() || document.activeElement.blur();
+  if (inputs[i + 1]) {
+    inputs[i + 1].focus();
+  }
   generateFinalWord();
 };
 
@@ -199,6 +201,7 @@ const keyPressAutocompleteHandler = (e) => {
       wordList.includes(normalizeString(currentAuto?.input?.value))
     ) {
       e.preventDefault();
+      console.log('it happened here');
       focusOnNextWord();
     }
     return;
@@ -223,6 +226,8 @@ const keyPressAutocompleteHandler = (e) => {
       /*and simulate a click on the "active" item:*/
       if (suggestionList) suggestionList[currentAuto.focus].click();
     }
+    // focus on the next input
+    focusOnNextWord();
   }
 };
 
@@ -279,17 +284,150 @@ const autocompleteSuggest = (input) => {
   }
 };
 
-document
-  .querySelectorAll('.autocomplete')
-  .forEach((input) =>
-    input.addEventListener('keydown', keyPressAutocompleteHandler)
-  );
+document.querySelectorAll('.autocomplete').forEach((input) => {
+  input.addEventListener('keydown', keyPressAutocompleteHandler);
+  input.addEventListener('blur', clearAutocompleteItems);
+});
 
 const deriveChecksumBits = async (entropyBuffer) => {
   const ENT = entropyBuffer.length * 8;
   const CS = ENT / 32;
   const hash = await crypto.subtle.digest('SHA-256', entropyBuffer);
   return bytesToBinary([...new Uint8Array(hash)]).slice(0, CS);
+};
+
+(function (root, factory) {
+  if (
+    typeof define == 'function' &&
+    typeof define.amd == 'object' &&
+    define.amd
+  ) {
+    define(function () {
+      return factory(root);
+    });
+  } else if (typeof module == 'object' && module && module.exports) {
+    module.exports = factory(root);
+  } else {
+    root.Levenshtein = factory(root);
+  }
+})(this, function (root) {
+  function forEach(array, fn) {
+    var i, length;
+    i = -1;
+    length = array.length;
+    while (++i < length) fn(array[i], i, array);
+  }
+
+  function map(array, fn) {
+    var result;
+    result = Array(array.length);
+    forEach(array, function (val, i, array) {
+      result[i] = fn(val, i, array);
+    });
+    return result;
+  }
+
+  function reduce(array, fn, accumulator) {
+    forEach(array, function (val, i, array) {
+      accumulator = fn(val, i, array);
+    });
+    return accumulator;
+  }
+
+  // Levenshtein distance
+  function Levenshtein(str_m, str_n) {
+    var previous, current, matrix;
+    // Constructor
+    matrix = this._matrix = [];
+
+    // Sanity checks
+    if (str_m == str_n) return (this.distance = 0);
+    else if (str_m == '') return (this.distance = str_n.length);
+    else if (str_n == '') return (this.distance = str_m.length);
+    else {
+      // Danger Will Robinson
+      previous = [0];
+      forEach(str_m, function (v, i) {
+        i++, (previous[i] = i);
+      });
+
+      matrix[0] = previous;
+      forEach(str_n, function (n_val, n_idx) {
+        current = [++n_idx];
+        forEach(str_m, function (m_val, m_idx) {
+          m_idx++;
+          if (str_m.charAt(m_idx - 1) == str_n.charAt(n_idx - 1))
+            current[m_idx] = previous[m_idx - 1];
+          else
+            current[m_idx] = Math.min(
+              previous[m_idx] + 1, // Deletion
+              current[m_idx - 1] + 1, // Insertion
+              previous[m_idx - 1] + 1 // Subtraction
+            );
+        });
+        previous = current;
+        matrix[matrix.length] = previous;
+      });
+
+      return (this.distance = current[current.length - 1]);
+    }
+  }
+
+  Levenshtein.prototype.toString = Levenshtein.prototype.inspect =
+    function inspect(no_print) {
+      var matrix, max, buff, sep, rows;
+      matrix = this.getMatrix();
+      max = reduce(
+        matrix,
+        function (m, o) {
+          return Math.max(m, reduce(o, Math.max, 0));
+        },
+        0
+      );
+      buff = Array((max + '').length).join(' ');
+
+      sep = [];
+      while (sep.length < ((matrix[0] && matrix[0].length) || 0))
+        sep[sep.length] = Array(buff.length + 1).join('-');
+      sep = sep.join('-+') + '-';
+
+      rows = map(matrix, function (row) {
+        var cells;
+        cells = map(row, function (cell) {
+          return (buff + cell).slice(-buff.length);
+        });
+        return cells.join(' |') + ' ';
+      });
+
+      return rows.join('\n' + sep + '\n');
+    };
+
+  Levenshtein.prototype.getMatrix = function () {
+    return this._matrix.slice();
+  };
+
+  Levenshtein.prototype.valueOf = function () {
+    return this.distance;
+  };
+
+  return Levenshtein;
+});
+
+const findNearestWord = (word) => {
+  let minDistance = 99;
+  let closestWord = wordList[0];
+  for (let i = 0; i < wordList.length; i++) {
+    const comparedTo = wordList[i];
+    if (comparedTo.indexOf(word) === 0) {
+      return comparedTo;
+    }
+    const distance = new window.Levenshtein(word, comparedTo).distance;
+    if (distance < minDistance) {
+      closestWord = comparedTo;
+      minDistance = distance;
+    }
+  }
+  return closestWord;
 };
 
 const generateFinalWord = async () => {
@@ -301,20 +439,29 @@ const generateFinalWord = async () => {
     .slice(0, -1);
   const finalWord = inputs[inputs.length - 1];
   if (words.includes('')) {
-    console.log('words :>> ', words);
     finalWord.value = '';
+    finalWord.classList.remove('has-text-white', 'has-background-info');
     return;
   }
   const wordIndexes = words.map((w) => wordList.indexOf(w));
   let wordsAreWrong = false;
+  let suggestions = '';
   wordIndexes.forEach((wi, i) => {
-    if (wi === -1) wordsAreWrong = true;
+    if (wi === -1) {
+      wordsAreWrong = true;
+      const nearestWord = findNearestWord(words[i]);
+      suggestions += `<li>"${words[i]}" is not in the word list, did you mean "${nearestWord}"?</li>`;
+    }
     inputs[i].classList.toggle('is-danger', wi === -1);
   });
+  const finalWordSuggestions = document.getElementById('finalWordSuggestions');
   if (wordsAreWrong) {
     finalWord.value = '';
+    finalWordSuggestions.classList.remove('is-hidden');
+    finalWordSuggestions.querySelector('ul').innerHTML = suggestions;
     return;
   }
+  finalWordSuggestions.classList.add('is-hidden');
   const numWords = words.length;
   const entLength = 11 - (numWords + 1) / 3;
   const entBits = (
@@ -335,7 +482,11 @@ const generateFinalWord = async () => {
   const checkSumBits = await deriveChecksumBits(buf);
   const lastWordBits = entBits + checkSumBits;
   const lastWord = wordList[parseInt(lastWordBits, 2)];
-  finalWord.value = wordList.includes(lastWord) ? lastWord : '';
+  const wordIsValid = wordList.includes(lastWord);
+  finalWord.value = wordIsValid ? lastWord : '';
+  finalWord.classList.toggle('has-text-white', wordIsValid);
+  finalWord.classList.toggle('has-background-info', wordIsValid);
+  clearAutocompleteItems();
 };
 
 // Functions to open and close a modal
@@ -948,3 +1099,11 @@ window.addEventListener('DOMContentLoaded', () => {
   element = document.querySelector('#text');
   type(words);
 });
+
+if (location.host === 'www.borderwallets.com') {
+  alert(
+    `Thanks for using the online demonstration version of the Border Wallets Entropy Grid Generator.
+
+As per our best practice guidance, do not use this for real money, but instead download a version of this tool to use on an offline, air-gapped machine.    `
+  );
+}

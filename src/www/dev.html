@@ -12,24 +12,6 @@
       width: 80px;
     }
 
-    .blinking-cursor {
-      font-weight: 100;
-      color: #2E3D48;
-      animation: 1s blink step-end infinite;
-    }
-
-    @keyframes blink {
-
-      from,
-      to {
-        color: transparent;
-      }
-
-      50% {
-        color: whitesmoke;
-      }
-    }
-
     .loader {
       color: #000000;
       font-size: 90px;
@@ -195,7 +177,8 @@
           <div class="message-body">
             <div class="content">
               <p>If you have not familiarised yourself with what Border Wallets are, how they are created using the
-                Entropy Grid Generator, and how to use and handle them, please visit our website before starting.
+                Entropy Grid Generator, and how to use and handle them, please visit <a
+                  href="https://www.borderwallets.com">our website</a> before starting.
                 As per our Best Practices guidance, we advise users to transfer this HTML file to an offline, air-gapped
                 computer before generating any Entropy Grids.</p>
             </div>
@@ -284,7 +267,8 @@
                 <p>
                   Most users will opt for Word Grids, which produces the first four letters of each BIP39 seed word in a
                   randomised order
-                  using the Fisher-Yates Shuffle algorithm running locally in your browser. When you hit "GENERATE
+                  using the Fisher-Yates Shuffle algorithm and your browser's built-in cryptographically secure
+                  pseudorandom number generator. When you hit "GENERATE
                   GRID", your chosen
                   grid(s) - formatted in a 2-page PDF - will be sent to your downloads folder.
                 </p>
@@ -311,8 +295,29 @@
           </article>
         </section>
         <section class="tab-section is-hidden" id="final">
+          <article class="message is-dark">
+            <div class="message-body">
+              <div class="content">
+                <p>Input your chosen seed words. The final (checksum) word will be calculated for you
+                  automatically. The words on your Entropy Grid that are longer than 4 characters have been truncated
+                  down to 4
+                  characters in order to fit it on 2 pages. This is safe to do as the first 4 (at the most) characters
+                  of all
+                  words are unique.</p>
+                <p>As you type in your word, you will be offered suggestions. You can use your arrow keys to highlight
+                  the correct
+                  suggestion and press enter or just click on the correct suggestion.</p>
+              </div>
+            </div>
+          </article>
           <div class="field">
+            <label class="label">Wallet Seed Format</label>
             <div class="control">
+              <input class="input is-hidden" disabled type="number">
+            </div>
+          </div>
+          <div class="field">
+            <div class="control is-align-self-center">
               <label class="radio">
                 <input type="radio" name="finalWordRadio">
                 12 Words
@@ -324,12 +329,6 @@
             </div>
           </div>
           <div id="finalWordInputSection12" class="final-word-input-section is-hidden">
-            <div class="field">
-              <label class="label">12th Word Recovery Number</label>
-              <div class="control">
-                <input class="input is-rounded" type="number" value="1" min="1" max="128" id="finalRandom12">
-              </div>
-            </div>
             <div class="field">
               <label class="label">Input Your First 11 Seed Words</label>
               <div class="control">
@@ -411,20 +410,21 @@
                 <div class="field">
                   <div class="control">
                     <input onkeyup="autocompleteSuggest(this)"
-                      class="autocomplete final-word final-word-12-input input is-rounded is-dark" type="text" disabled
+                      class="autocomplete final-word final-word-12-input input is-rounded is-info" type="text" disabled
                       placeholder="12">
+                    <span class="tag is-info is-rounded">Your Final Word is:</span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div id="finalWordInputSection24" class="final-word-input-section">
             <div class="field">
-              <label class="label">24th Word Recovery Number</label>
+              <label class="label">Final Word Number</label>
               <div class="control">
-                <input class="input is-rounded" type="number" value="1" min="1" max="8" id="finalRandom24">
+                <input class="input is-rounded" type="number" value="1" min="1" max="128" id="finalRandom12">
               </div>
             </div>
+          </div>
+          <div id="finalWordInputSection24" class="final-word-input-section">
             <div class="field">
               <label class="label">Input Your First 23 Seed Words</label>
               <div class="control">
@@ -578,21 +578,66 @@
                 <div class="field">
                   <div class="control">
                     <input onkeyup="autocompleteSuggest(this)"
-                      class="autocomplete final-word final-word-24-input input is-rounded is-dark" type="text" disabled
+                      class="autocomplete final-word final-word-24-input input is-rounded is-info" type="text" disabled
                       placeholder="24">
+                    <span class="tag is-info is-rounded">Your Final Word is:</span>
                   </div>
                 </div>
               </div>
             </div>
+            <div class="field">
+              <label class="label">Final Word Number</label>
+              <div class="control">
+                <input class="input is-rounded" type="number" value="1" min="1" max="8" id="finalRandom24">
+              </div>
+            </div>
           </div>
+
+          <article class="message is-danger mt-4 is-hidden" id="finalWordSuggestions">
+            <div class="message-body">
+              <div class="content">
+                <h5 style="color: currentColor;">ERROR!</h5>
+                <ul>
+                  <li>"clos" is not in the BIP39 word list, did you mean "close"?</li>
+                </ul>
+              </div>
+            </div>
+          </article>
           <article class="message is-dark">
             <div class="message-body">
               <div class="content">
+                <p>There are two times you need to use this part of the tool.</p>
+                <ol>
+                  <li>Creating your seed for the first time.</li>
+                  <li>Recreating your seed on the "other side of the border"</li>
+                </ol>
                 <p>
-                  Some text explaining the final word generator
+                  In both cases you will need the complete seed phrase to enter into a Bitcoin Wallet in order to
+                  receive or send money to it.
                 </p>
                 <p>
-                  Another paragraph of text
+                  In the first case, strong entropy is used to generate a random number. For a 12th word, it will be
+                  between 1-128. For a 24th word it will be between 1-8.
+                </p>
+
+                <p>
+                  You can then just remember that number, or record it on your Entropy Grid, text it to someone, email
+                  it to yourself,
+                  whatever you want. The number doesn't give anything away about the other words in your seed. Without
+                  the other words, the number is
+                  absolutely useless.
+                </p>
+
+                <p>
+                  When the time comes to recreate your seed phrase, you can input the Final Word Number and your 11 or
+                  23 words, and our
+                  tool will present you with the same final word. If you do not wish to use this feature, then you need
+                  will just need to
+                  remember the final word itself when you first create your wallet.
+                </p>
+                <p>
+                  <strong>NOTE:</strong> It is much more secure to use the randomly generated number provided than to
+                  scroll through numbers to choose the word you prefer!
                 </p>
               </div>
             </div>
@@ -603,7 +648,7 @@
             <div class="control">
               <label class="radio">
                 <input type="radio" name="regenerateRadio" checked>
-                12 Words (Highly recommended)
+                12 Words (Best Practice)
               </label>
               <label class="radio">
                 <input type="radio" name="regenerateRadio">

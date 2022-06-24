@@ -12,24 +12,6 @@
       width: 80px;
     }
 
-    .blinking-cursor {
-      font-weight: 100;
-      color: #2E3D48;
-      animation: 1s blink step-end infinite;
-    }
-
-    @keyframes blink {
-
-      from,
-      to {
-        color: transparent;
-      }
-
-      50% {
-        color: whitesmoke;
-      }
-    }
-
     .loader {
       color: #000000;
       font-size: 90px;
@@ -13346,7 +13328,8 @@ a.has-text-danger-dark:focus {
           <div class="message-body">
             <div class="content">
               <p>If you have not familiarised yourself with what Border Wallets are, how they are created using the
-                Entropy Grid Generator, and how to use and handle them, please visit our website before starting.
+                Entropy Grid Generator, and how to use and handle them, please visit <a
+                  href="https://www.borderwallets.com">our website</a> before starting.
                 As per our Best Practices guidance, we advise users to transfer this HTML file to an offline, air-gapped
                 computer before generating any Entropy Grids.</p>
             </div>
@@ -13435,7 +13418,8 @@ a.has-text-danger-dark:focus {
                 <p>
                   Most users will opt for Word Grids, which produces the first four letters of each BIP39 seed word in a
                   randomised order
-                  using the Fisher-Yates Shuffle algorithm running locally in your browser. When you hit "GENERATE
+                  using the Fisher-Yates Shuffle algorithm and your browser's built-in cryptographically secure
+                  pseudorandom number generator. When you hit "GENERATE
                   GRID", your chosen
                   grid(s) - formatted in a 2-page PDF - will be sent to your downloads folder.
                 </p>
@@ -13462,8 +13446,29 @@ a.has-text-danger-dark:focus {
           </article>
         </section>
         <section class="tab-section is-hidden" id="final">
+          <article class="message is-dark">
+            <div class="message-body">
+              <div class="content">
+                <p>Input your chosen seed words. The final (checksum) word will be calculated for you
+                  automatically. The words on your Entropy Grid that are longer than 4 characters have been truncated
+                  down to 4
+                  characters in order to fit it on 2 pages. This is safe to do as the first 4 (at the most) characters
+                  of all
+                  words are unique.</p>
+                <p>As you type in your word, you will be offered suggestions. You can use your arrow keys to highlight
+                  the correct
+                  suggestion and press enter or just click on the correct suggestion.</p>
+              </div>
+            </div>
+          </article>
           <div class="field">
+            <label class="label">Wallet Seed Format</label>
             <div class="control">
+              <input class="input is-hidden" disabled type="number">
+            </div>
+          </div>
+          <div class="field">
+            <div class="control is-align-self-center">
               <label class="radio">
                 <input type="radio" name="finalWordRadio">
                 12 Words
@@ -13475,12 +13480,6 @@ a.has-text-danger-dark:focus {
             </div>
           </div>
           <div id="finalWordInputSection12" class="final-word-input-section is-hidden">
-            <div class="field">
-              <label class="label">12th Word Recovery Number</label>
-              <div class="control">
-                <input class="input is-rounded" type="number" value="1" min="1" max="128" id="finalRandom12">
-              </div>
-            </div>
             <div class="field">
               <label class="label">Input Your First 11 Seed Words</label>
               <div class="control">
@@ -13562,20 +13561,21 @@ a.has-text-danger-dark:focus {
                 <div class="field">
                   <div class="control">
                     <input onkeyup="autocompleteSuggest(this)"
-                      class="autocomplete final-word final-word-12-input input is-rounded is-dark" type="text" disabled
+                      class="autocomplete final-word final-word-12-input input is-rounded is-info" type="text" disabled
                       placeholder="12">
+                    <span class="tag is-info is-rounded">Your Final Word is:</span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div id="finalWordInputSection24" class="final-word-input-section">
             <div class="field">
-              <label class="label">24th Word Recovery Number</label>
+              <label class="label">Final Word Number</label>
               <div class="control">
-                <input class="input is-rounded" type="number" value="1" min="1" max="8" id="finalRandom24">
+                <input class="input is-rounded" type="number" value="1" min="1" max="128" id="finalRandom12">
               </div>
             </div>
+          </div>
+          <div id="finalWordInputSection24" class="final-word-input-section">
             <div class="field">
               <label class="label">Input Your First 23 Seed Words</label>
               <div class="control">
@@ -13729,21 +13729,66 @@ a.has-text-danger-dark:focus {
                 <div class="field">
                   <div class="control">
                     <input onkeyup="autocompleteSuggest(this)"
-                      class="autocomplete final-word final-word-24-input input is-rounded is-dark" type="text" disabled
+                      class="autocomplete final-word final-word-24-input input is-rounded is-info" type="text" disabled
                       placeholder="24">
+                    <span class="tag is-info is-rounded">Your Final Word is:</span>
                   </div>
                 </div>
               </div>
             </div>
+            <div class="field">
+              <label class="label">Final Word Number</label>
+              <div class="control">
+                <input class="input is-rounded" type="number" value="1" min="1" max="8" id="finalRandom24">
+              </div>
+            </div>
           </div>
+
+          <article class="message is-danger mt-4 is-hidden" id="finalWordSuggestions">
+            <div class="message-body">
+              <div class="content">
+                <h5 style="color: currentColor;">ERROR!</h5>
+                <ul>
+                  <li>"clos" is not in the BIP39 word list, did you mean "close"?</li>
+                </ul>
+              </div>
+            </div>
+          </article>
           <article class="message is-dark">
             <div class="message-body">
               <div class="content">
+                <p>There are two times you need to use this part of the tool.</p>
+                <ol>
+                  <li>Creating your seed for the first time.</li>
+                  <li>Recreating your seed on the "other side of the border"</li>
+                </ol>
                 <p>
-                  Some text explaining the final word generator
+                  In both cases you will need the complete seed phrase to enter into a Bitcoin Wallet in order to
+                  receive or send money to it.
                 </p>
                 <p>
-                  Another paragraph of text
+                  In the first case, strong entropy is used to generate a random number. For a 12th word, it will be
+                  between 1-128. For a 24th word it will be between 1-8.
+                </p>
+
+                <p>
+                  You can then just remember that number, or record it on your Entropy Grid, text it to someone, email
+                  it to yourself,
+                  whatever you want. The number doesn't give anything away about the other words in your seed. Without
+                  the other words, the number is
+                  absolutely useless.
+                </p>
+
+                <p>
+                  When the time comes to recreate your seed phrase, you can input the Final Word Number and your 11 or
+                  23 words, and our
+                  tool will present you with the same final word. If you do not wish to use this feature, then you need
+                  will just need to
+                  remember the final word itself when you first create your wallet.
+                </p>
+                <p>
+                  <strong>NOTE:</strong> It is much more secure to use the randomly generated number provided than to
+                  scroll through numbers to choose the word you prefer!
                 </p>
               </div>
             </div>
@@ -13754,7 +13799,7 @@ a.has-text-danger-dark:focus {
             <div class="control">
               <label class="radio">
                 <input type="radio" name="regenerateRadio" checked>
-                12 Words (Highly recommended)
+                12 Words (Best Practice)
               </label>
               <label class="radio">
                 <input type="radio" name="regenerateRadio">
@@ -16901,7 +16946,9 @@ const removeAutocompleteActive = () => {
 const focusOnNextWord = () => {
   const inputs = [...document.querySelectorAll('input.autocomplete')];
   const i = inputs.indexOf(currentAuto.input);
-  inputs[i + 1]?.focus() || document.activeElement.blur();
+  if (inputs[i + 1]) {
+    inputs[i + 1].focus();
+  }
   generateFinalWord();
 };
 
@@ -16914,6 +16961,7 @@ const keyPressAutocompleteHandler = (e) => {
       wordList.includes(normalizeString(currentAuto?.input?.value))
     ) {
       e.preventDefault();
+      console.log('it happened here');
       focusOnNextWord();
     }
     return;
@@ -16938,6 +16986,8 @@ const keyPressAutocompleteHandler = (e) => {
       /*and simulate a click on the "active" item:*/
       if (suggestionList) suggestionList[currentAuto.focus].click();
     }
+    // focus on the next input
+    focusOnNextWord();
   }
 };
 
@@ -16994,17 +17044,150 @@ const autocompleteSuggest = (input) => {
   }
 };
 
-document
-  .querySelectorAll('.autocomplete')
-  .forEach((input) =>
-    input.addEventListener('keydown', keyPressAutocompleteHandler)
-  );
+document.querySelectorAll('.autocomplete').forEach((input) => {
+  input.addEventListener('keydown', keyPressAutocompleteHandler);
+  input.addEventListener('blur', clearAutocompleteItems);
+});
 
 const deriveChecksumBits = async (entropyBuffer) => {
   const ENT = entropyBuffer.length * 8;
   const CS = ENT / 32;
   const hash = await crypto.subtle.digest('SHA-256', entropyBuffer);
   return bytesToBinary([...new Uint8Array(hash)]).slice(0, CS);
+};
+
+(function (root, factory) {
+  if (
+    typeof define == 'function' &&
+    typeof define.amd == 'object' &&
+    define.amd
+  ) {
+    define(function () {
+      return factory(root);
+    });
+  } else if (typeof module == 'object' && module && module.exports) {
+    module.exports = factory(root);
+  } else {
+    root.Levenshtein = factory(root);
+  }
+})(this, function (root) {
+  function forEach(array, fn) {
+    var i, length;
+    i = -1;
+    length = array.length;
+    while (++i < length) fn(array[i], i, array);
+  }
+
+  function map(array, fn) {
+    var result;
+    result = Array(array.length);
+    forEach(array, function (val, i, array) {
+      result[i] = fn(val, i, array);
+    });
+    return result;
+  }
+
+  function reduce(array, fn, accumulator) {
+    forEach(array, function (val, i, array) {
+      accumulator = fn(val, i, array);
+    });
+    return accumulator;
+  }
+
+  // Levenshtein distance
+  function Levenshtein(str_m, str_n) {
+    var previous, current, matrix;
+    // Constructor
+    matrix = this._matrix = [];
+
+    // Sanity checks
+    if (str_m == str_n) return (this.distance = 0);
+    else if (str_m == '') return (this.distance = str_n.length);
+    else if (str_n == '') return (this.distance = str_m.length);
+    else {
+      // Danger Will Robinson
+      previous = [0];
+      forEach(str_m, function (v, i) {
+        i++, (previous[i] = i);
+      });
+
+      matrix[0] = previous;
+      forEach(str_n, function (n_val, n_idx) {
+        current = [++n_idx];
+        forEach(str_m, function (m_val, m_idx) {
+          m_idx++;
+          if (str_m.charAt(m_idx - 1) == str_n.charAt(n_idx - 1))
+            current[m_idx] = previous[m_idx - 1];
+          else
+            current[m_idx] = Math.min(
+              previous[m_idx] + 1, // Deletion
+              current[m_idx - 1] + 1, // Insertion
+              previous[m_idx - 1] + 1 // Subtraction
+            );
+        });
+        previous = current;
+        matrix[matrix.length] = previous;
+      });
+
+      return (this.distance = current[current.length - 1]);
+    }
+  }
+
+  Levenshtein.prototype.toString = Levenshtein.prototype.inspect =
+    function inspect(no_print) {
+      var matrix, max, buff, sep, rows;
+      matrix = this.getMatrix();
+      max = reduce(
+        matrix,
+        function (m, o) {
+          return Math.max(m, reduce(o, Math.max, 0));
+        },
+        0
+      );
+      buff = Array((max + '').length).join(' ');
+
+      sep = [];
+      while (sep.length < ((matrix[0] && matrix[0].length) || 0))
+        sep[sep.length] = Array(buff.length + 1).join('-');
+      sep = sep.join('-+') + '-';
+
+      rows = map(matrix, function (row) {
+        var cells;
+        cells = map(row, function (cell) {
+          return (buff + cell).slice(-buff.length);
+        });
+        return cells.join(' |') + ' ';
+      });
+
+      return rows.join('\n' + sep + '\n');
+    };
+
+  Levenshtein.prototype.getMatrix = function () {
+    return this._matrix.slice();
+  };
+
+  Levenshtein.prototype.valueOf = function () {
+    return this.distance;
+  };
+
+  return Levenshtein;
+});
+
+const findNearestWord = (word) => {
+  let minDistance = 99;
+  let closestWord = wordList[0];
+  for (let i = 0; i < wordList.length; i++) {
+    const comparedTo = wordList[i];
+    if (comparedTo.indexOf(word) === 0) {
+      return comparedTo;
+    }
+    const distance = new window.Levenshtein(word, comparedTo).distance;
+    if (distance < minDistance) {
+      closestWord = comparedTo;
+      minDistance = distance;
+    }
+  }
+  return closestWord;
 };
 
 const generateFinalWord = async () => {
@@ -17016,20 +17199,29 @@ const generateFinalWord = async () => {
     .slice(0, -1);
   const finalWord = inputs[inputs.length - 1];
   if (words.includes('')) {
-    console.log('words :>> ', words);
     finalWord.value = '';
+    finalWord.classList.remove('has-text-white', 'has-background-info');
     return;
   }
   const wordIndexes = words.map((w) => wordList.indexOf(w));
   let wordsAreWrong = false;
+  let suggestions = '';
   wordIndexes.forEach((wi, i) => {
-    if (wi === -1) wordsAreWrong = true;
+    if (wi === -1) {
+      wordsAreWrong = true;
+      const nearestWord = findNearestWord(words[i]);
+      suggestions += `<li>"${words[i]}" is not in the word list, did you mean "${nearestWord}"?</li>`;
+    }
     inputs[i].classList.toggle('is-danger', wi === -1);
   });
+  const finalWordSuggestions = document.getElementById('finalWordSuggestions');
   if (wordsAreWrong) {
     finalWord.value = '';
+    finalWordSuggestions.classList.remove('is-hidden');
+    finalWordSuggestions.querySelector('ul').innerHTML = suggestions;
     return;
   }
+  finalWordSuggestions.classList.add('is-hidden');
   const numWords = words.length;
   const entLength = 11 - (numWords + 1) / 3;
   const entBits = (
@@ -17050,7 +17242,11 @@ const generateFinalWord = async () => {
   const checkSumBits = await deriveChecksumBits(buf);
   const lastWordBits = entBits + checkSumBits;
   const lastWord = wordList[parseInt(lastWordBits, 2)];
-  finalWord.value = wordList.includes(lastWord) ? lastWord : '';
+  const wordIsValid = wordList.includes(lastWord);
+  finalWord.value = wordIsValid ? lastWord : '';
+  finalWord.classList.toggle('has-text-white', wordIsValid);
+  finalWord.classList.toggle('has-background-info', wordIsValid);
+  clearAutocompleteItems();
 };
 
 // Functions to open and close a modal
@@ -17663,6 +17859,14 @@ window.addEventListener('DOMContentLoaded', () => {
   element = document.querySelector('#text');
   type(words);
 });
+
+if (location.host === 'www.borderwallets.com') {
+  alert(
+    `Thanks for using the online demonstration version of the Border Wallets Entropy Grid Generator.
+
+As per our best practice guidance, do not use this for real money, but instead download a version of this tool to use on an offline, air-gapped machine.    `
+  );
+}
 
       </script>
   
