@@ -43,7 +43,7 @@ console.log('Building HTML file...');
       console.log('Done!');
     }
 
-    const output = path.join(__dirname, '../borderwallets.html');
+    const output = path.join(__dirname, '../dist/borderwallets.html');
     await writeFile(output, result, 'utf8');
     console.log(`Task completed! Built file is available at ${output}`);
   } catch (error) {
