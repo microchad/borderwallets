@@ -201,7 +201,6 @@ const keyPressAutocompleteHandler = (e) => {
       wordList.includes(normalizeString(currentAuto?.input?.value))
     ) {
       e.preventDefault();
-      console.log('it happened here');
       focusOnNextWord();
     }
     return;
@@ -284,9 +283,14 @@ const autocompleteSuggest = (input) => {
   }
 };
 
+const handleInputBlur = () => {
+  // allow the onclick to happen first
+  setTimeout(clearAutocompleteItems, 300);
+};
+
 document.querySelectorAll('.autocomplete').forEach((input) => {
   input.addEventListener('keydown', keyPressAutocompleteHandler);
-  input.addEventListener('blur', clearAutocompleteItems);
+  input.addEventListener('blur', handleInputBlur);
 });
 
 const deriveChecksumBits = async (entropyBuffer) => {
@@ -583,7 +587,6 @@ function handleFiles(files) {
   updateProcessingStatus('Initialising...');
   startProcessing();
   const file = files[0];
-  console.log('file :>> ', file);
   if (!file || !file.name) {
     endProcessing();
     alert('Error: Invalid file or missing file name');
