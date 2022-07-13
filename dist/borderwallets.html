@@ -17004,13 +17004,16 @@ const autocompleteSuggest = (input) => {
   currentAuto.term = searchText;
   clearAutocompleteItems();
   if (searchText === '') return;
-  const searchResults = [
+  let searchResults = [
     ...new Set(
       wordList
         .filter((word) => word.startsWith(searchText))
         .concat(wordList.filter((word) => word.includes(searchText)))
     ),
   ].slice(0, 5);
+  if (wordList.filter((word) => word.startsWith(searchText)).length === 1) {
+    searchResults = [searchResults[0]];
+  }
   if (searchResults.length === 1 && searchResults[0] === searchText) {
     // user has found their word
     clearAutocompleteItems();
