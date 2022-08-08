@@ -7,7 +7,7 @@
     "dev": "nodemon ./src/server.js",
     "build": "node ./src/build.js",
     "git": "npm run build && git pull && git add . && git commit -m \"$MSG\" && git push",
-    "release": "npm run git && ./sign_and_release.sh",
+    "release": "npm run git && ./dist/sign_and_release.sh",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
