@@ -494,6 +494,43 @@ const generateFinalWord = async () => {
   finalWord.classList.toggle('has-text-white', wordIsValid);
   finalWord.classList.toggle('has-background-info', wordIsValid);
   clearAutocompleteItems();
+  if (wordIsValid) {
+    makeCompactSeedQR(arr);
+  } else {
+    clearCompactSeedQR();
+  }
+};
+
+/**
+ * SeedQR
+ */
+const clearCompactSeedQR = () => {
+  const canvas = document.getElementById('compactSeedQRCanvas');
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+};
+const makeCompactSeedQR = (arr) => {
+  const canvas = document.getElementById('compactSeedQRCanvas');
+  clearCompactSeedQR();
+  window.QRCode.toCanvas(
+    canvas,
+    [
+      {
+        data: arr,
+        mode: 'byte',
+      },
+    ],
+    {
+      errorCorrectionLevel: 'L',
+      width: 300,
+      // color: {
+      //   light: '#f99925ff',
+      //   dark: '#00151aFF',
+      // },
+    },
+    function (err) {
+      if (err) console.log(err);
+    }
+  );
 };
 
 // Functions to open and close a modal
@@ -927,7 +964,7 @@ const regenerateSeedGrid = (_event, indemnified) => {
   shuffle(words, mnemonic);
   const typeOfGrid = document.getElementById('regenerateGridSelect').value;
   const cells = words.map(getCellValue[typeOfGrid]);
-  saveGrid(cells, mnemonic, typeOfGrid);
+  saveGrid(cells, mnemonic, typeOfGrid, true);
 };
 
 const generateSeedGrid = async () => {
@@ -937,7 +974,7 @@ const generateSeedGrid = async () => {
   shuffle(words, seed);
   const typeOfGrid = getGridType();
   const cells = words.map(getCellValue[typeOfGrid]);
-  saveGrid(cells, seed, typeOfGrid);
+  saveGrid(cells, seed, typeOfGrid, false);
 };
 
 // returns blank, char, num, idx or hex
@@ -997,7 +1034,28 @@ const getTable = (cells, startIndex = 0) => {
 };
 
 /* cspell:disable */
-const saveGrid = (cells, seed, typeOfGrid) => {
+const saveGrid = async (cells, seed, typeOfGrid, isRegeneration) => {
+  document
+    .getElementById('gridQR')
+    .classList.toggle('is-hidden', typeOfGrid === 'blank' || isRegeneration);
+  document
+    .getElementById('gridQRRegeneration')
+    .classList.toggle('is-hidden', typeOfGrid === 'blank' || !isRegeneration);
+  const canvas = await QRCode.toCanvas(
+    isRegeneration
+      ? document.getElementById('gridQRCanvasRegeneration')
+      : document.getElementById('gridQRCanvas'),
+    [
+      {
+        data: `bweg:${encodeURI(seed)}?v=1`,
+        mode: 'byte',
+      },
+    ],
+    {
+      errorCorrectionLevel: 'L',
+      width: 300,
+    }
+  );
   const { jsPDF } = window.jspdf;
   const tableOpts = {
     theme: 'grid',
@@ -1040,8 +1098,14 @@ const saveGrid = (cells, seed, typeOfGrid) => {
       body: getTable(cells.slice(1024), 1024),
       ...tableOpts,
     })
-    .text(recovery, 105, 285, { align: 'center' })
-    .save(`BorderWallet${gridType}Grid.pdf`);
+    .text(recovery, 105, 285, { align: 'center' });
+  if (typeOfGrid !== 'blank') {
+    doc
+      .addPage()
+      .addImage(canvas, 'PNG', 5, 5, 50, 50)
+      .text('GridQR - Keep this safe', 30, 55, { align: 'center' });
+  }
+  doc.save(`BorderWallet${gridType}Grid.pdf`);
 };
 
 let element;

@@ -250,6 +250,20 @@
               </div>
             </div>
           </div>
+          <div id="gridQR" class="field is-horizontal is-hidden">
+            <div class="field-label is-normal">
+              <label class="label">GridQR</label>
+            </div>
+            <div class="field-body">
+              <div class="field is-narrow">
+                <div class="control">
+                  <canvas id="gridQRCanvas" height="300" width="300" style="height: 300px; width: 300px;"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+          </div>
           <article class="message is-dark">
             <div class="message-body">
               <div class="content">
@@ -603,6 +617,15 @@
               </div>
             </div>
           </article>
+          <br><br>
+          <article>
+            <div class="field">
+              <label class="label" for="compactSeedQR">Compact SeedQR</label>
+              <div id="compactSeedQR">
+                <canvas id="compactSeedQRCanvas" height="300" width="300" style="height: 300px; width: 300px;"></canvas>
+              </div>
+            </div>
+          </article>
           <article class="message is-dark">
             <div class="message-body">
               <div class="content">
@@ -853,6 +876,19 @@
               </div>
             </div>
           </div>
+          <div id="gridQRRegeneration" class="field is-horizontal is-hidden">
+            <div class="field-label is-normal">
+              <label class="label">GridQR</label>
+            </div>
+            <div class="field-body">
+              <div class="field is-narrow">
+                <div class="control">
+                  <canvas id="gridQRCanvasRegeneration" height="300" width="300"
+                    style="height: 300px; width: 300px;"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
           <article class="message is-dark">
             <div class="message-body">
               <div class="content">
@@ -987,6 +1023,7 @@
   <script class="border-wallets-dev-script" src="wordlist.js"></script>
   <script class="border-wallets-dev-script" src="uheprng.js"></script>
   <script class="border-wallets-dev-script" src="zxcvbn.js"></script>
+  <script class="border-wallets-dev-script" src="qrcode.js"></script>
   <script class="border-wallets-dev-script" src="dev.js"></script>
   <script id="websocket">// NOTE: This script tag MUST be the last on the page!
     let timer;

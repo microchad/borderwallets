@@ -1,1 +1,1 @@
-4b2b33125d7c59a0071becb49715ce8e0eeb7ce6030124d3268eedb3b16d95a3  ./dist/borderwallets.html
+4b2b33125d7c59a0071becb49715ce8e0eeb7ce6030124d3268eedb3b16d95a3  borderwallets.html
