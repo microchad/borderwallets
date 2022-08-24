@@ -33,5 +33,14 @@ The high iteration count takes quite a long time on a standard PC but since the 
 
 Although the *Border Wallets Entropy Grid Generator* allows any file to be encrypted, it is optimised for the Entropy Grid PDF file. Larger files may not work.
 
+## GridQR
 
+GridQR format is as follows:
+
+`bweg:<URI encoded grid regeneration phrase>?v=<version number>`
+
+Examples: 
+`bweg:industry%20palace%20melt%20still%20wreck%20unfair%20ivory%20absorb%20brother%20few%20rigid%20toy?v=1`
+`bweg:border%20wallets%20and%20seed%20signer%20had%20a%20baby?v=1`
+`bweg:WeeetrttTYrYTNLKJlLKNJlkJNlknJLhnKGBgFVhgDXGfs%D1%88%D0%B5%D0%BB%D0%BB%D1%8B?v=1`
 

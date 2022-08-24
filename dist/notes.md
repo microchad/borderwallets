@@ -1,2 +1,2 @@
 New stuff
-- Fix error in location pointing to hashed release
+- Added SeedQR and GridQR
