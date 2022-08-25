@@ -11,7 +11,7 @@ console.log('Building HTML file...');
     result = result.replace(/<script id="websocket">[^]*<\/script>/, '');
     console.log('Hot reload Web Socket script tags removed...');
     const regex1 = new RegExp(
-      /<script class="border-wallets-dev-script" src="(?<path>...*)">[^]*?</
+      /<script class="border-wallets-dev-script" src="(?<path>...*)">[^]*?<\/script>/
     );
     let array1 = regex1.exec(result);
     while (array1 !== null) {
@@ -20,10 +20,9 @@ console.log('Building HTML file...');
       const js = await readFile(scriptLocation, 'utf8');
       result = result.replace(
         array1[0],
-        `<script>
-      ${js}
-      <`
+        `<script data-identity="${array1[1]}">${js}</script>`
       );
+      console.log('array1 :>> ', array1[0], array1[1]);
       array1 = regex1.exec(result);
       console.log('Done!');
     }
