@@ -13,10 +13,16 @@ document.querySelectorAll('input[name="regenerateRadio"]').forEach((rad) => {
     regenerateTwelveWords.forEach((i) => {
       i.value = '';
     });
+    let index = null;
+    document
+      .querySelectorAll('input[name="regenerateRadio"]')
+      .forEach((radio, i) => {
+        if (radio.checked) index = i;
+      });
     document
       .querySelectorAll('.regenerate-option-sections')
-      .forEach((section) => {
-        section.classList.toggle('is-hidden');
+      .forEach((section, i) => {
+        section.classList.toggle('is-hidden', i !== index);
       });
   });
 });
@@ -933,6 +939,41 @@ const isGoodMnemonic = (mnemonic) => {
   return isGood;
 };
 
+const scanGridQR = () => {
+  const problemBox = (warningText) => {
+    const box = document.getElementById('scanGridQRWarningBox');
+    const p = document.getElementById('scanGridQRWarningText');
+    p.innerText = warningText;
+    box.classList.toggle('is-hidden', !warningText);
+  };
+  problemBox('');
+  QRScanner.initiate({
+    onResult: function (result) {
+      console.log('result :>> ', result);
+      if (result.data?.startsWith('bweg:')) {
+        console.log(
+          'results.data :>> ',
+          decodeURI(result.data).replace('bweg:', '').replace('?v=1', '')
+        );
+        regenerationPhraseInput.value = decodeURI(result.data)
+          .replace('bweg:', '')
+          .replace('?v=1', '');
+        regenerateSeedGrid();
+      } else {
+        // invalid
+        problemBox('Invalid GridQR Code');
+      }
+    },
+    onError: function (err) {
+      problemBox('ERROR :::: ' + err);
+    }, // optional
+    onTimeout: function () {
+      problemBox('TIMEOUT: Unable to scan the QR Code in 30 seconds');
+    }, // optional
+    timeout: 30000,
+  });
+};
+
 const regenerateSeedGrid = (_event, indemnified) => {
   const mnemonic =
     normalizeString(regenerationPhraseInput.value) ||
@@ -1069,7 +1110,10 @@ const saveGrid = async (cells, seed, typeOfGrid, isRegeneration) => {
   const ctx = canvas.getContext('2d');
 
   let p = new Path2D(
-    document.querySelector('#gridQRDiv > svg > path').getAttribute('d')
+    document.querySelector('#gridQRDiv > svg > path')?.getAttribute('d') ||
+      document
+        .querySelector('#gridQRDivRegeneration > svg > path')
+        ?.getAttribute('d')
   );
   ctx.fill(p);
   doc
@@ -1092,8 +1136,8 @@ const saveGrid = async (cells, seed, typeOfGrid, isRegeneration) => {
   if (typeOfGrid !== 'blank') {
     doc
       .addPage()
-      .addImage(canvas, 'PNG', 5, 5, 50, 50)
-      .text('GridQR - Keep this safe', 24.5, 48, { align: 'center' });
+      .addImage(canvas, 'PNG', 20, 20, 100, 100)
+      .text('GridQR - Keep this safe', 60, 110, { align: 'center' });
   }
   doc.save(`BorderWallet${gridType}Grid.pdf`);
 };
