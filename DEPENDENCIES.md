@@ -102,6 +102,24 @@ affected is the user doing the typing.
 Not applicable to 2.5.1: GHSA-57f3-gghm-9mhc (`<2.3.1`), GHSA-vh59-v9r5-4mh4 and
 GHSA-3q6f-8grx-pr4v (both `<2.0.0`).
 
+### Network behaviour of the built file
+
+`dist/borderwallets.html` contains no `fetch`, `WebSocket` or `sendBeacon`, and
+no `http://` or `ws://` reference outside licence headers and SVG `xmlns`
+identifiers.
+
+There are three `XMLHttpRequest` sites, all inside `src/www/pdf.js` and none of
+them reachable:
+
+- FileSaver's download-by-URL helper, used only when `saveAs()` is given a URL
+  string. `saveGrid()` passes a Blob.
+- FileSaver's CORS pre-check, on the same unused path.
+- jsPDF's `loadFile`, which backs `addFont`/`loadFile`. Neither is called.
+
+This is what makes `connect-src 'none'` safe to ship: nothing in the tool
+legitimately makes a network request, so the policy cannot break a working
+feature. It is also the same dead code path behind GHSA-f8cm-6447-x5h2.
+
 ### What would invalidate this analysis
 
 The table above is a claim about **how this tool calls jsPDF**, not about jsPDF.

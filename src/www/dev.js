@@ -91,36 +91,41 @@ const finalRandom24 = document.getElementById('finalRandom24');
   };
 });
 
-const calcPassphrasePotentialEntropy = (pwd) => {
-  const len = pwd.length;
-  let charSet = 0;
-  const lowerCase = /[a-z]/;
-  const upperCase = /[A-Z]/;
-  const space = /[\s]/;
-  const digit = /[\d]/;
-  const symbolChar = /[`!"$%^&*()_\+-\=\{\}\[\]:;@'~#|\\<>,.?/]/;
-  if (lowerCase.test(pwd)) charSet += 26;
-  if (upperCase.test(pwd)) charSet += 26;
-  if (space.test(pwd)) charSet += 1;
-  if (digit.test(pwd)) charSet += 10;
-  if (symbolChar.test(pwd)) charSet += 32;
-  const combos = BigInt(charSet) ** BigInt(len);
-  const ent = BigInt(combos.toString(2).length - 1);
-  return parseInt(ent);
-};
+// A Regeneration Phrase determines the whole grid, so its strength matters.
+// zxcvbn is used rather than a charset^length calculation: the latter scores
+// any long lowercase sentence as "strong", which it is not. zxcvbn reports an
+// estimated guess count as a log10 value, so convert it to bits.
+// zxcvbn is roughly quadratic in input length (~40ms for 150 characters), so
+// long phrases are truncated before scoring. This can only understate the
+// result: if a 100 character prefix already clears the target, so does the
+// whole phrase.
+const PHRASE_TARGET_BITS = 128;
+const PHRASE_SCORING_MAX_CHARS = 100;
+const estimatePhraseBits = (phrase) =>
+  phrase
+    ? Math.round(
+        zxcvbn(phrase.slice(0, PHRASE_SCORING_MAX_CHARS)).guesses_log10 *
+          Math.log2(10)
+      )
+    : 0;
 
 const regenerationPhraseInput = document.querySelector(
   '#regenerationPhraseInput'
 );
-regenerationPhraseInput.oninput = () => {
-  const ent = calcPassphrasePotentialEntropy(
-    normalizeString(regenerationPhraseInput.value)
-  );
+const showPhraseStrength = () => {
+  const ent = estimatePhraseBits(normalizeString(regenerationPhraseInput.value));
   const ppe = document.querySelector('#potentialEntropy');
   ppe.innerText = `${ent} ${ent === 1 ? 'bit' : 'bits'}`;
-  const enough = ent >= 128;
+  const enough = ent >= PHRASE_TARGET_BITS;
   ppe.classList.toggle('is-danger', !enough);
   ppe.classList.toggle('is-success', enough);
+};
+
+// Debounced so scoring never runs on the typing hot path.
+let phraseStrengthTimer;
+regenerationPhraseInput.oninput = () => {
+  clearTimeout(phraseStrengthTimer);
+  phraseStrengthTimer = setTimeout(showPhraseStrength, 150);
 };
 
 const finalWordPhraseInput = document.getElementById('finalWordPhraseInput');
@@ -939,36 +944,75 @@ const isGoodMnemonic = (mnemonic) => {
   return isGood;
 };
 
+// Shared by all three regenerate options, so the box lives outside the
+// per-option sections — those are hidden unless their option is selected.
+const regenerateProblemBox = (warningText) => {
+  const box = document.getElementById('regenerateWarningBox');
+  const p = document.getElementById('regenerateWarningText');
+  p.innerText = warningText;
+  box.classList.toggle('is-hidden', !warningText);
+};
+
+// GridQR format: bweg:<URI encoded regeneration phrase>?v=<version number>
+// The version must be read rather than stripped. A future format would produce
+// a different grid from the same phrase, so an unrecognised version has to be
+// refused outright — silently regenerating a v1 grid from it would hand the
+// user the wrong wallet.
+const GRIDQR_PREFIX = 'bweg:';
+const GRIDQR_SUPPORTED_VERSION = 1;
+
+const parseGridQR = (data) => {
+  if (!data?.startsWith(GRIDQR_PREFIX)) return { error: 'Invalid GridQR Code' };
+  const body = data.slice(GRIDQR_PREFIX.length);
+  // Search from the right: encodeURI does not escape '?', so a phrase may
+  // legitimately contain one.
+  const marker = body.lastIndexOf('?v=');
+  const encodedPhrase = marker === -1 ? body : body.slice(0, marker);
+  // Codes predating the version parameter are treated as v1.
+  const version = marker === -1 ? GRIDQR_SUPPORTED_VERSION : body.slice(marker + 3);
+  if (Number(version) !== GRIDQR_SUPPORTED_VERSION) {
+    return {
+      error: `Unsupported GridQR version "${version}". This tool only supports v${GRIDQR_SUPPORTED_VERSION}. Use the version of the Entropy Grid Generator that produced this code.`,
+    };
+  }
+  let phrase;
+  try {
+    phrase = decodeURI(encodedPhrase);
+  } catch (e) {
+    return { error: 'Invalid GridQR Code: the phrase could not be decoded' };
+  }
+  if (!phrase) return { error: 'Invalid GridQR Code: no regeneration phrase' };
+  // Maximum Entropy grids have no Regeneration Phrase. Earlier versions still
+  // printed a GridQR page for them, encoding the literal text "null". Those
+  // PDFs exist, so refuse the payload rather than regenerate an unrelated grid
+  // from the word "null".
+  if (phrase === 'null' || phrase === 'undefined') {
+    return {
+      error:
+        'This GridQR is from a Maximum Entropy Grid, which has no Regeneration Phrase and cannot be regenerated. Keep the original grid safe — it is the only copy.',
+    };
+  }
+  return { phrase };
+};
+
 const scanGridQR = () => {
-  const problemBox = (warningText) => {
-    const box = document.getElementById('scanGridQRWarningBox');
-    const p = document.getElementById('scanGridQRWarningText');
-    p.innerText = warningText;
-    box.classList.toggle('is-hidden', !warningText);
-  };
-  problemBox('');
+  regenerateProblemBox('');
   QRScanner.initiate({
     onResult: function (result) {
-      console.log('result :>> ', result);
-      if (result.data?.startsWith('bweg:')) {
-        console.log(
-          'results.data :>> ',
-          decodeURI(result.data).replace('bweg:', '').replace('?v=1', '')
-        );
-        regenerationPhraseInput.value = decodeURI(result.data)
-          .replace('bweg:', '')
-          .replace('?v=1', '');
-        regenerateSeedGrid();
-      } else {
-        // invalid
-        problemBox('Invalid GridQR Code');
+      const { phrase, error } = parseGridQR(result.data);
+      if (error) {
+        regenerateProblemBox(error);
+        return;
       }
+      regenerationPhraseInput.value = phrase;
+      showPhraseStrength();
+      regenerateSeedGrid();
     },
     onError: function (err) {
-      problemBox('ERROR :::: ' + err);
+      regenerateProblemBox('ERROR :::: ' + err);
     }, // optional
     onTimeout: function () {
-      problemBox('TIMEOUT: Unable to scan the QR Code in 30 seconds');
+      regenerateProblemBox('TIMEOUT: Unable to scan the QR Code in 30 seconds');
     }, // optional
     timeout: 30000,
   });
@@ -980,8 +1024,24 @@ const regenerateSeedGrid = (_event, indemnified) => {
     [...regenerateTwelveWords]
       .map((el) => normalizeString(el.value.toLowerCase()))
       .join(' ');
-  if (!mnemonic || calcPassphrasePotentialEntropy(mnemonic) < 128) return;
-  if (!isGoodMnemonic(mnemonic) && !indemnified) {
+  if (!mnemonic) {
+    regenerateProblemBox(
+      'Enter a Regeneration Phrase, or fill in all twelve words, before regenerating.'
+    );
+    return;
+  }
+  regenerateProblemBox('');
+  // A weak or non-standard phrase is confirmed, not refused. Phrases accepted
+  // by earlier versions of this tool must stay able to regenerate their grid,
+  // otherwise a user who backed one up would lose access to their wallet.
+  const bits = estimatePhraseBits(mnemonic);
+  const isWeak = bits < PHRASE_TARGET_BITS;
+  if ((!isGoodMnemonic(mnemonic) || isWeak) && !indemnified) {
+    // The dialog fires for two different reasons; say which one applies.
+    document.getElementById('regenerationWeakPhraseBits').innerText = bits;
+    document
+      .getElementById('regenerationWeakPhraseWarning')
+      .classList.toggle('is-hidden', !isWeak);
     document
       .querySelector('#regenerationConfirmation')
       .classList.add('is-active');
@@ -1062,22 +1122,35 @@ const getTable = (cells, startIndex = 0) => {
 
 /* cspell:disable */
 const saveGrid = async (cells, seed, typeOfGrid, isRegeneration) => {
+  // A GridQR encodes the Regeneration Phrase. Maximum Entropy grids have no
+  // phrase — seed is null — and cannot be regenerated from one, so there is
+  // nothing to encode. Emitting a QR anyway promises a backup that does not
+  // exist, and encodes the literal text "null".
+  const hasGridQR = typeOfGrid !== 'blank' && Boolean(seed);
   document
     .getElementById('gridQR')
-    .classList.toggle('is-hidden', typeOfGrid === 'blank' || isRegeneration);
+    .classList.toggle('is-hidden', !hasGridQR || isRegeneration);
   document
     .getElementById('gridQRRegeneration')
-    .classList.toggle('is-hidden', typeOfGrid === 'blank' || !isRegeneration);
-  const div = isRegeneration
-    ? document.getElementById('gridQRDivRegeneration')
-    : document.getElementById('gridQRDiv');
-  const qr = new QRCode(0, 'L');
-  qr.addData(`bweg:${encodeURI(seed)}?v=1`);
-  qr.make();
-  div.innerHTML = qr.createSvgTag({
-    cellSize: 5,
-    scalable: true,
-  });
+    .classList.toggle('is-hidden', !hasGridQR || !isRegeneration);
+  const gridQRDiv = document.getElementById('gridQRDiv');
+  const gridQRDivRegeneration = document.getElementById(
+    'gridQRDivRegeneration'
+  );
+  // Always clear both: the PDF below reads whichever one holds an SVG, so a QR
+  // left over from a previous grid would otherwise be printed onto this one.
+  gridQRDiv.innerHTML = '';
+  gridQRDivRegeneration.innerHTML = '';
+  if (hasGridQR) {
+    const div = isRegeneration ? gridQRDivRegeneration : gridQRDiv;
+    const qr = new QRCode(0, 'L');
+    qr.addData(`bweg:${encodeURI(seed)}?v=1`);
+    qr.make();
+    div.innerHTML = qr.createSvgTag({
+      cellSize: 5,
+      scalable: true,
+    });
+  }
   const { jsPDF } = window.jspdf;
   const tableOpts = {
     theme: 'grid',
@@ -1104,18 +1177,20 @@ const saveGrid = async (cells, seed, typeOfGrid, isRegeneration) => {
   const logo =
     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAACWCAMAAABThUXgAAAAAXNSR0IArs4c6QAAAdRQTFRFAAAAAAABAAEAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAEAAQAAWkMlVAAAAJh0Uk5TAAAAAAUHCAoMDQ8SExQVFxkbHB0eICIjKCkqLi8xMzY3ODk6PD1AQkhMTU9RU1VXWVpbXV5gYmRlZmhtbnBxcnN0enuAhIWGh4mKi4yOj5GSlZeZmpudnp+io6Slp6iqra6wsbK1tba3uLm6u7+/w8TFxsfIysvMztHU1tfY2dvc3d7f4uTl5ufo6uvt7u/y8/T19vf4+vtL+sUfAAAHeUlEQVR42u2d/VsVRRTH90XwpczKFwxDTeUWGoQZ5i3N1FtexJQXEyFITUulbghCwC1DpUgQTcBoX/7ZwB542MvszpnZmdmZvXN+4tGZ3TOf/c7ZmTOzcw3DMDY3XxubdzjZi99/unL2LQNuCG+mCx1ZkiqFnVGl32m9NR68/txob347zLvaGS6U3FV/PztTCWUV5s3INpIq96pDS3+Mvv5sE8S7JkeEjW6AsYrwZhOgysoTKobR6g29fu3qYjay8vZZIbCcSyBWUd50otsQUuUi+gYfhV9/ZjPWvTy647C3TyCw8lFXOEhS5elWZOn+iOs3Y93r5cgnQP8XCKxIb04SVTmELP3X2oL+8h/XsO6NOoLsSagLJtCbNqIGHEO+N6OuP4aFNScKlvMqKnxaBN7cJmrAaVThPVHXn8fCQtfzAvpkYzUAZUVeoEDQANfJoQpnIm8Q7RvOPaaWAcQsNrBexko2sIzUw3I0rLKAtTyAqI8L62eOsFw2sJiF+TNaWXDrkRGWLyms59XlqiyPos6AvLA82ZTlON+8jvLA0jELnQW52Xk2l8t9tn+DDvBwWxhoCGrKFgrLVQpWWA5BKyvEsurBus8ZSfiYdkQ9WDeEKckDSEtyWBeS64ftysF6LzlYt/Etd2PCsksSeDFhGe3cZs44+42BskyhyjKM5qSU9QIFy5e5Gy7au3enMKkoTqZczPrfXtubYWMNuetxYHlufFg+b1gsrWEqbcqyIEuetAZ9SygY4NnbEWw+Xm5l2UJpAXd8WWoGeMY2lOq3IbWhFdvFFZYZCK/KKyunlQV/V+Zgkye1YVlaWbobxodlkYbt6P+1tLJiKMvXsHTM4gTL5QfLTgespWacF6csmwcsizGTyAFXtzrd0OOrLBP/L3d0zALbbhir+xrWoo3DYN1QH1bsTGndJDCr3KwkrK2Hjp3OMbKuMfDi424FYVVffCpytXBl8NWBabknIazqYjJLrNerQlruSqysewmAmuprrSNquSSwdorF1FtbVRG9iAbZGGKJgxVIsRTErNRHtUBKZVnE7rG2QUMZWAYtLGabkA6UASxmtoMlLDtZWLQKcqHarIB442plMfCGHpalPCxT/Zjlya0siwiWKX83dPl3Q7MMYtYbqRw6cOqMe3ALt2vk6Zfv27Bd8QA/J5TWh2p3w1HadtONYLvJsg7EsHwaWC4UFpvzs4hj3FRf635iWFbSysoLZbTanh8NZots+bshrzP/IByzTLuhJyCtzPo0SYJYNoJuuS/x6g6nc0odGmmxTdFYHNYN2Z6A6xN0xq8ZdENPqLJY264jnVCwBb3XYdGnKdgb4E/CmGWmEZbRAsxMsFGWpzasXZQJrnLshobxRE5YjVLC+pUdLJ8OVheqcDMPWBZq8ZrEChyUNUwEC3n47w0plcUD1gTZlsw64v2baYI1i7rR0dDik8T7N3kCMQXDcloQN7oSXny8ZGthDuJNvF2itjTKQj36bOTU6k73+eXtm5fvPiH2JrbZScJyTm0J6Hp3h9hlTQZmiYPlLDwuFpatOM04j6RugBd22BIQFq/DHmxmyoLvR3QV6YYoK3Lqhskpi8nBM2h7TOSepQQsXrZlgdg9MxlYXvKwTjkp7Ia8eimte4J2mMvUDVuo3VNAWQdPtt0usLLhiVl4pJAK1j8AVJs6SQMhv2eZKKwHeFbbSK/pphVWAQ9rRKYokSisbiyrrBA/QiZ688SweG6mzmNhdST5LNckM2cSdOYZ/md2C4JdCkijWOrNUIKwAD+iNJ2ksvpLvekR+noJ2Gglu7E2F3dPRO9DjJ/S8sExrmejwQMWFBy+qZPrSr3Zx1vLaIenhz9lOovjYYgV9qsi7z/z7RcfZDKZt19hPeVlbw/rY2QNYwSHlZLoH5iKhOUJJeQ7M0NdS0tTjTXr0Q4dfiTIlQF+yRRGI4aRLNajyuq644s0z30/QXSHC3vfXKpdsePAIKh8xI/i2WBYXDNKE0QPsokAVyPJ0vOSfVearTOjF/fEx6wmQt2DJ67BeR3ks5FLFDlOoawmSINEFjofDB6CUAuo8SVWR2vzxkJh/UAcUqGTxeAhCFV04xZsVp3PpC/EzhHDgk4Wg5+aVbCBlWw3JHcQeLK8E9kqXz1YHo2DORawkPZ5+pRFCQvw0UKGAtYc9TSYwo4Tr1FSwurDVvh3IwWsUZHKquOlrOmSEUArtsYgBStGn/0Cp6/VxO41wqYWpQsz77/sGV5EF6mjgZUXKKxHlcTu1cDm+Wt+DXcAU+ErqqV2Xp/9ouwwuXvrH0Iu/PfeNRUvR5UHTOdDZqvCWBVp3KuHXBl1XESm9dY44q01X7zZlqXfCCPqs9+rdA8zhz19eCSLbSS7TXuIz34ZZwRnhnry+2jdW3eivzgZ9lnyHz+203Ypi/PmR21CzRawn1VBM8WiT59ZWibl/DhtQ5u2oHBsjUCWl72tSemXWrmNb7k9TksLk3icZEqmBT3yVORhmCnuJmU32TBTgcZSmHK5xUT2SpFuUG1L3VVZ9DBLOlnpeJzKkYdOY+l5sn6WCdl/8dGlGTlWWkAAAAAASUVORK5CYII=';
   const doc = new jsPDF();
-  const canvas = document.createElement('canvas');
-  canvas.setAttribute('height', '300');
-  canvas.setAttribute('width', '300');
-  const ctx = canvas.getContext('2d');
-
-  let p = new Path2D(
-    document.querySelector('#gridQRDiv > svg > path')?.getAttribute('d') ||
-      document
-        .querySelector('#gridQRDivRegeneration > svg > path')
-        ?.getAttribute('d')
-  );
-  ctx.fill(p);
+  let canvas;
+  if (hasGridQR) {
+    canvas = document.createElement('canvas');
+    canvas.setAttribute('height', '300');
+    canvas.setAttribute('width', '300');
+    const ctx = canvas.getContext('2d');
+    const p = new Path2D(
+      document.querySelector('#gridQRDiv > svg > path')?.getAttribute('d') ||
+        document
+          .querySelector('#gridQRDivRegeneration > svg > path')
+          ?.getAttribute('d')
+    );
+    ctx.fill(p);
+  }
   doc
     .setFontSize(8.5)
     .addImage(logo, 'PNG', 10, 5, 5, 5, 'logo', 'NONE', 0)
@@ -1133,7 +1208,7 @@ const saveGrid = async (cells, seed, typeOfGrid, isRegeneration) => {
       ...tableOpts,
     })
     .text(recovery, 105, 285, { align: 'center' });
-  if (typeOfGrid !== 'blank') {
+  if (hasGridQR) {
     doc
       .addPage()
       .addImage(canvas, 'PNG', 20, 20, 100, 100)
