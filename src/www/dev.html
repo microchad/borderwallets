@@ -3,6 +3,21 @@
 
 <head>
   <meta charset="UTF-8">
+  <!--
+    Content Security Policy.
+
+    'unsafe-inline' is unavoidable: the distributed file inlines every script
+    and stylesheet, so this does not buy XSS protection. The directive doing
+    real work is connect-src, which stops the page making network requests of
+    any kind. It is defence in depth, not tamper protection — anyone able to
+    modify the file can also delete this tag.
+
+    connect-src below is widened just enough for the dev server's hot-reload
+    websocket. src/build.js rewrites it to 'none' for dist/borderwallets.html
+    and fails the build if it cannot. Do not hand-edit that value.
+  -->
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data:; connect-src ws://localhost:8080; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bitcoin Border Wallets</title>
@@ -838,7 +853,7 @@
             </div>
             <div class="field is-horizontal">
               <div class="field-label is-normal">
-                <label class="label">Minimum Potential Entropy</label>
+                <label class="label">Estimated Entropy</label>
               </div>
               <div class="field-body">
                 <div class="field is-narrow">
@@ -853,12 +868,6 @@
             <p>Click the button below to use your device camera to scan a GridQR in order to regenerate your Grid. If
               you have not
               already granted this tool permission to use your camera, you will be prompted to do that.</p>
-            <div class="notification is-danger is-hidden" id="scanGridQRWarningBox">
-              <div class="content">
-                <h4 style="color: currentColor;">ERROR!</h4>
-                <p id="scanGridQRWarningText"></p>
-              </div>
-            </div>
             <div class="field is-horizontal">
               <div class="field-label">
                 <!-- Left empty for spacing -->
@@ -871,6 +880,15 @@
                 </div>
               </div>
             </div><br><br>
+          </div>
+          <!-- Shared across all three regenerate options, so it must sit outside
+               the .regenerate-option-sections blocks, which are hidden unless
+               their option is selected. -->
+          <div class="notification is-danger is-hidden" id="regenerateWarningBox">
+            <div class="content">
+              <h4 style="color: currentColor;">ERROR!</h4>
+              <p id="regenerateWarningText"></p>
+            </div>
           </div>
           <div class="field is-horizontal">
             <div class="field-label is-normal">
@@ -1019,6 +1037,12 @@
           <p>
             If you're trying to create a grid from a self-generated entropy Regeneration Phrase, your funds could be at
             risk if not enough real entropy was used.
+          </p>
+          <p class="is-hidden" id="regenerationWeakPhraseWarning">
+            <strong>This phrase looks weak.</strong> We estimate it at
+            <strong><span id="regenerationWeakPhraseBits"></span> bits</strong>, well below the 128 bits a
+            tool-generated Regeneration Phrase provides. Your Entropy Grid is only as hard to reproduce as the phrase
+            that generates it.
           </p>
           <p>
             Are you sure you want to continue?
