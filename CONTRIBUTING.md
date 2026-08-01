@@ -21,6 +21,15 @@ In the root directory of the project type:
 npm i
 ```
 
+Note that `.npmrc` sets `ignore-scripts=true`, so no dependency install hooks
+run — this repository is also where releases are built and signed, see
+[DEPENDENCIES.md](./DEPENDENCIES.md). The only dependency this affects is
+`fsevents` (optional, macOS only), where the file watcher falls back to polling.
+If `npm run dev` misbehaves after a fresh install, check that first:
+```
+npm i --no-ignore-scripts
+```
+
 ### Ready to code
 In the root directory of the project type:
 ```
