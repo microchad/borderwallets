@@ -793,55 +793,42 @@
                   improperly!
                 </p>
                 <p>
-                  You have chosen to generate an Entropy Grid from your own passphrase. Entropy is about
+                  You have chosen to generate an Entropy Grid from your own Regeneration Phrase. Entropy is about
                   <strong>RANDOMNESS!</strong>
                   There
                   is no
-                  randomness involved in creating your Pattern Grid as you need to make a pattern that is not random and
+                  randomness involved in creating your Pattern as you need to make a pattern that is not random and
                   easy to remember.
-                  This means that all the entropy for your seed should come from the Entropy Grid (hence the name!)
+                  This means that all the entropy for your seed comes from the Regeneration Phrase you enter here.
                 </p>
                 <p>
                   Cryptographers highly recommend (perhaps even insist on) a minimum of 128-bits of entropy to generate
-                  Bitcoin seeds. We
-                  have included a tool that will calculate the <strong>minimum potential entropy</strong> of your
-                  passphrase, based on
-                  the
-                  length and set
-                  of characters used. This is <strong>NOT</strong> a measure of the entropy in your passphrase and how
-                  you generate
-                  randomness is up to you
-                  when using this advanced feature.
+                  Bitcoin seeds. The <strong>Estimated Entropy</strong> figure below is an estimate of how hard your
+                  Regeneration Phrase would be to guess. It recognises common words, repeats and patterns, so a phrase
+                  like "bacon bacon bacon bacon bacon" scores low. It is an estimate, not a measurement, and how you
+                  generate randomness is up to you when using this advanced feature.
+                </p>
+                <p>
+                  The estimate can be too low as well as too high. If you generated 128 bits of randomness yourself and
+                  entered it as hex or Base64, it will usually score below 128 bits — you can safely ignore the figure
+                  in that case, safe in the knowledge that you have generated sufficient entropy on your own. It also
+                  cannot see the reasons a phrase might be predictable to somebody who knows you: a quotation, personal
+                  information, or a password you have used elsewhere.
+                </p>
+                <p>
+                  Note well that the tool will not refuse a weak Regeneration Phrase. If the phrase looks weak, or is
+                  not a standard 12 word mnemonic, you will be asked to confirm before the Entropy Grid is generated.
+                  Proceeding is at your own risk.
                 </p>
                 <p>
                   We recommend the <a href="https://www.eff.org/dice">EFF's Diceware Long Word List</a> if you wish to
                   do this
                   yourself. Note that
-                  you will need to generate a 10 word passphrase to have at least 128 bits of entropy. Our built in
-                  solution uses 12 words
+                  you will need to generate a 10 word phrase to have at least 128 bits of entropy. Best practice remains
+                  our built in
+                  solution, which uses 12 words
                   from Bitcoin's, much shorter, BIP39 word list from 128 bits of entropy in the same way that wallets
                   make seeds
-                </p>
-                <p>
-                  If you generate your own 128-bit entropy and input your passphrase here, the tool may say that your
-                  potential entropy is
-                  higher. You can safely ignore it in this case, safe in the knowledge that you have generated
-                  sufficient entropy on your
-                  own.
-                </p>
-                <p>
-                  Note well that the tool will not generate an Entropy Grid if the potential entropy of your passphrase
-                  is
-                  below 128 bits.
-                  This is for your own protection and for the integrity of the Border Wallets concept as a whole.
-                </p>
-                <p>
-                  If you generate your own 128-bit entropy and input your passphrase here, the tool may say that your
-                  potential entropy is
-                  higher. You can safely ignore it in this case, safe in the knowledge that you have generated
-                  sufficient
-                  entropy on your
-                  own.
                 </p>
               </div>
             </div>
