@@ -33,7 +33,7 @@ fastify.get('/', function (req, reply) {
 const start = async () => {
   try {
     await fastify.listen(3000, '127.0.0.1');
-    console.log(' Serving to http://localhost:3000/');
+    console.log(' Serving to http://127.0.0.1:3000/');
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

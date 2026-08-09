@@ -6,8 +6,10 @@ name: dist-freshness
 # dependencies, so this needs no install step.
 
 on:
+  # Only gh-pages on push (releases and direct pushes land there); pull_request
+  # covers every branch and fork PR without double-running the check.
   push:
-    branches: ['**']
+    branches: [gh-pages]
   pull_request:
 
 jobs:

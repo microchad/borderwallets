@@ -10,13 +10,21 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 ARTIFACT="borderwallets.html"
-HASHFILE="borderwallets.txt"
-SIGFILE="borderwallets.txt.asc"
+
+# Write the hash and signature into the repo's gitignored releases/ directory,
+# NOT dist/. dist/ is covered by `npm run git`'s `git add .`, so leaving the
+# artifacts there would commit a stale hash and signature alongside the next
+# release's borderwallets.html and break hash verification for users.
+RELEASE_DIR="../releases"
+HASHFILE="$RELEASE_DIR/borderwallets.txt"
+SIGFILE="$RELEASE_DIR/borderwallets.txt.asc"
 
 if [[ ! -f "$ARTIFACT" ]]; then
   echo "ERROR: $ARTIFACT not found in $(pwd); build it before releasing." >&2
   exit 1
 fi
+
+mkdir -p "$RELEASE_DIR"
 
 read -r -p ">> Enter the new version to release: " VERSION
 read -r -p ">> Enter the email address of your PGP keys: " EMAIL
@@ -26,7 +34,9 @@ if [[ -z "$VERSION" || -z "$EMAIL" ]]; then
   exit 1
 fi
 
-# Hash the exact artifact being released, then sign that hash.
+# Hash the exact artifact being released, then sign that hash. The hash file
+# records the bare filename so `sha256sum -c` works wherever the three release
+# files are downloaded together.
 sha256sum "$ARTIFACT" > "$HASHFILE"
 rm -f "$SIGFILE"
 gpg --sign --detach-sign --armor -u "$EMAIL" "$HASHFILE"
@@ -43,5 +53,5 @@ fi
 
 gh release create "$VERSION" -F ./notes.md \
   "./$ARTIFACT#Entropy Grid Generator DOWNLOAD" \
-  "./$HASHFILE" "./$SIGFILE"
+  "$HASHFILE" "$SIGFILE"
 echo "Done!"

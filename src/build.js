@@ -8,12 +8,26 @@ console.log('Building HTML file...');
 (async () => {
   try {
     let result = await readFile(path.join(__dirname, '/www/dev.html'), 'utf8');
-    // Non-greedy so the match ends at the websocket script's own closing tag
-    // rather than the last </script> in the document; assert it was removed so a
-    // dev-only hot-reload block can never silently survive into the artifact.
-    const beforeWsStrip = result;
-    result = result.replace(/<script id="websocket">[^]*?<\/script>/, '');
-    if (result === beforeWsStrip || result.includes('id="websocket"')) {
+    // The hot-reload websocket <script> must be the last script on the page
+    // (dev.html says so in a comment). Strip exactly that block and fail the
+    // build if any <script> follows it, so a dev/debug script added after it can
+    // never be inlined into the signed artifact users verify and trust offline.
+    const WS_RE = /<script id="websocket">[^]*?<\/script>/;
+    const wsMatch = result.match(WS_RE);
+    if (!wsMatch) {
+      throw new Error(
+        'Could not find the hot-reload websocket <script>; refusing to build.'
+      );
+    }
+    const afterWebsocket = result.slice(wsMatch.index + wsMatch[0].length);
+    if (/<script/i.test(afterWebsocket)) {
+      throw new Error(
+        'A <script> tag appears after the hot-reload websocket block, which ' +
+          'must be the last script on the page; refusing to build.'
+      );
+    }
+    result = result.slice(0, wsMatch.index) + afterWebsocket;
+    if (result.includes('id="websocket"')) {
       throw new Error(
         'Failed to strip the hot-reload websocket <script>; refusing to build.'
       );
@@ -23,7 +37,7 @@ console.log('Building HTML file...');
     // The dev CSP allows a websocket connection so hot reload works. The
     // distributed file must make no network requests at all. Fail the build
     // rather than ship the permissive policy by accident.
-    const DEV_CONNECT_SRC = "connect-src ws://localhost:8080";
+    const DEV_CONNECT_SRC = "connect-src ws://127.0.0.1:8080";
     const PROD_CONNECT_SRC = "connect-src 'none'";
     if (!result.includes(DEV_CONNECT_SRC)) {
       throw new Error(
