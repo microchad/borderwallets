@@ -69,7 +69,10 @@ const finalRandom24 = document.getElementById('finalRandom24');
 [finalRandom12, finalRandom24].forEach((inp) => {
   inp.oninput = () => {
     try {
-      if (inp.value === '') return;
+      if (inp.value === '') {
+        inp.classList.remove('is-danger');
+        return;
+      }
       const n = parseInt(inp.value);
       const max = parseInt(inp.max);
       const min = parseInt(inp.min);
@@ -83,10 +86,15 @@ const finalRandom24 = document.getElementById('finalRandom24');
         throw new RangeError(
           'Final Word Recovery Number must be greater than or equal to ' + min
         );
+      inp.classList.remove('is-danger');
       generateFinalWord();
     } catch (error) {
       console.error(error);
-      fillLuckyNumbers();
+      // Flag the bad value but keep it. Calling fillLuckyNumbers() here would
+      // silently replace a mistyped recovery number with a fresh random one —
+      // during a wallet restore that hands the user a different final word, and
+      // a different wallet, with no indication anything went wrong.
+      inp.classList.add('is-danger');
     }
   };
 });
@@ -463,12 +471,12 @@ const generateFinalWord = async () => {
   }
   const wordIndexes = words.map((w) => wordList.indexOf(w));
   let wordsAreWrong = false;
-  let suggestions = '';
+  const suggestions = [];
   wordIndexes.forEach((wi, i) => {
     if (wi === -1) {
       wordsAreWrong = true;
       const nearestWord = findNearestWord(words[i]);
-      suggestions += `<li>"${words[i]}" is not in the word list, did you mean "${nearestWord}"?</li>`;
+      suggestions.push({ word: words[i], nearestWord });
     }
     inputs[i].classList.toggle('is-danger', wi === -1);
   });
@@ -476,7 +484,16 @@ const generateFinalWord = async () => {
   if (wordsAreWrong) {
     finalWord.value = '';
     finalWordSuggestions.classList.remove('is-hidden');
-    finalWordSuggestions.querySelector('ul').innerHTML = suggestions;
+    // Build the list with textContent, never innerHTML: words[i] is raw user
+    // input, so interpolating it into markup would let a typed string such as
+    // <img src=x onerror=...> execute (the CSP still allows inline handlers).
+    const ul = finalWordSuggestions.querySelector('ul');
+    ul.innerHTML = '';
+    suggestions.forEach(({ word, nearestWord }) => {
+      const li = document.createElement('li');
+      li.textContent = `"${word}" is not in the word list, did you mean "${nearestWord}"?`;
+      ul.appendChild(li);
+    });
     return;
   }
   finalWordSuggestions.classList.add('is-hidden');
@@ -738,7 +755,9 @@ function getKey(keyMaterial, salt) {
     },
     keyMaterial,
     { name: 'AES-GCM', length: 256 },
-    true,
+    // Not extractable: the derived key is only ever used in-page to encrypt or
+    // decrypt the file, so nothing needs to export the raw key bytes.
+    false,
     ['encrypt', 'decrypt']
   );
 }
@@ -1145,7 +1164,19 @@ const saveGrid = async (cells, seed, typeOfGrid, isRegeneration) => {
     const div = isRegeneration ? gridQRDivRegeneration : gridQRDiv;
     const qr = new QRCode(0, 'L');
     qr.addData(`bweg:${encodeURI(seed)}?v=1`);
-    qr.make();
+    try {
+      qr.make();
+    } catch (e) {
+      // A phrase too long to fit even a version-40 QR throws here. Fail loudly:
+      // silently skipping the GridQR would print a grid whose machine-readable
+      // backup is missing, and the user would not discover it until recovery.
+      const msg =
+        'This Regeneration Phrase is too long to encode as a GridQR. Shorten ' +
+        'it, or keep the printed grid and the phrase itself as your backup.';
+      if (isRegeneration) regenerateProblemBox(msg);
+      else alert(msg);
+      return;
+    }
     div.innerHTML = qr.createSvgTag({
       cellSize: 5,
       scalable: true,
