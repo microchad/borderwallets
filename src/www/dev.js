@@ -769,7 +769,20 @@ function getKey(keyMaterial, salt, iterations = ITERATIONS) {
 // on decryption. Version-1 files predate this and are decrypted without AAD,
 // exactly as before, so 1.0.5-era backups keep opening.
 const buildEncryptionAad = (version, info, iterations) =>
-  new TextEncoder().encode(JSON.stringify({ version, info, iterations }));
+  new TextEncoder().encode(
+    // Canonical, order-independent encoding: a fixed-position array of the exact
+    // fields, NOT JSON.stringify of the parsed object. A tool or hand-edit that
+    // reordered the JSON keys would otherwise change the AAD and make an
+    // untampered file fail to decrypt with the correct passphrase.
+    JSON.stringify([
+      'bweg-encrypted-file',
+      Number(version),
+      Number(iterations),
+      String(info?.name ?? ''),
+      Number(info?.size ?? 0),
+      String(info?.type ?? ''),
+    ])
+  );
 
 // Neutralise path separators and control characters in a restored file's name
 // before it becomes a download. For version-1 files the name is not
@@ -777,8 +790,11 @@ const buildEncryptionAad = (version, info, iterations) =>
 // the download filename; ordinary names pass through unchanged.
 const sanitizeFileName = (name) => {
   const cleaned = String(name ?? '')
-    .replace(/[\\/]/g, '_')
-    .replace(/[\x00-\x1f\x7f]/g, '')
+    .replace(/[\\/]/g, '_') // path separators
+    .replace(/[\x00-\x1f\x7f-\x9f]/g, '') // C0, DEL and C1 control characters
+    // zero-width characters and bidirectional overrides (RLO etc.), which can
+    // disguise a file's real extension:
+    .replace(/[\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g, '')
     .trim();
   return cleaned || 'restored-file';
 };
@@ -847,7 +863,8 @@ const decryptFile = async (file) => {
         const data = JSON.parse(e.target.result);
         if (data.version !== 1 && data.version !== 2)
           throw new Error(
-            `Unsupported encrypted file version "${data.version}".`
+            'This encrypted file was made by a different version of the tool ' +
+              'and cannot be decrypted here.'
           );
         if (
           !data.BWEG ||
@@ -1026,20 +1043,30 @@ const GRIDQR_SUPPORTED_VERSION = 1;
 const parseGridQR = (data) => {
   if (!data?.startsWith(GRIDQR_PREFIX)) return { error: 'Invalid GridQR Code' };
   const body = data.slice(GRIDQR_PREFIX.length);
-  // Recognise the version only as a trailing ?v=<digits> suffix. encodeURI does
-  // not escape '?' or '=', so a phrase may itself contain '?v=' in its middle;
-  // anchoring to the end avoids splitting on that (unlike a lastIndexOf search,
-  // which truncated such phrases). A code with no trailing marker predates the
-  // version parameter and is treated as v1.
-  const versionMatch = body.match(/\?v=(\d+)$/);
-  const encodedPhrase = versionMatch ? body.slice(0, versionMatch.index) : body;
-  const version = versionMatch
-    ? Number(versionMatch[1])
-    : GRIDQR_SUPPORTED_VERSION;
-  if (version !== GRIDQR_SUPPORTED_VERSION) {
-    return {
-      error: `Unsupported GridQR version "${version}". This tool only supports v${GRIDQR_SUPPORTED_VERSION}. Use the version of the Entropy Grid Generator that produced this code.`,
-    };
+  // Detect a trailing version marker: '?v=' at the very end, followed by no
+  // further '?'. encodeURI does not escape '?' or '=', so a phrase may contain
+  // '?v=' in its middle; matching only the trailing region avoids splitting on
+  // that. If a trailing marker is present it MUST be a clean, supported version,
+  // otherwise the code is refused rather than folded into the phrase: a genuine
+  // newer, third-party or malformed code must never silently derive a v1 grid.
+  // A code with no trailing marker at all predates the version parameter and is
+  // treated as v1.
+  const markerMatch = body.match(/\?v=([^?]*)$/);
+  let encodedPhrase = body;
+  if (markerMatch) {
+    const rawVersion = markerMatch[1];
+    if (
+      !/^\d+$/.test(rawVersion) ||
+      Number(rawVersion) !== GRIDQR_SUPPORTED_VERSION
+    ) {
+      return {
+        error:
+          'This GridQR was produced by a different version of the Entropy Grid ' +
+          'Generator and cannot be read here. Use the version that produced it, ' +
+          'or type your Regeneration Phrase in manually.',
+      };
+    }
+    encodedPhrase = body.slice(0, markerMatch.index);
   }
   let phrase;
   try {
@@ -1061,8 +1088,25 @@ const parseGridQR = (data) => {
   return { phrase };
 };
 
+// Clear any displayed grid fingerprint so a stale value never sits next to a
+// fresh scan's "check this matches" prompt or a new regeneration.
+const clearGridFingerprints = () => {
+  ['gridFingerprint', 'gridFingerprintRegeneration'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = '';
+      el.classList.add('is-hidden');
+    }
+  });
+};
+
 const scanGridQR = () => {
   regenerateProblemBox('');
+  clearGridFingerprints();
+  // Start each scan clean: a previously staged phrase must not survive a failed
+  // rescan and get regenerated by mistake.
+  regenerationPhraseInput.value = '';
+  showPhraseStrength();
   const scanResult = document.getElementById('scanGridQRResult');
   if (scanResult) {
     scanResult.textContent = '';
@@ -1082,7 +1126,10 @@ const scanGridQR = () => {
       regenerationPhraseInput.value = phrase;
       showPhraseStrength();
       if (scanResult) {
-        scanResult.textContent = `Scanned phrase (${phrase.length} characters): "${phrase}". Check it is exactly right, then press REGENERATE GRID. If it looks truncated or altered, type your phrase in full instead.`;
+        // Count code points, not UTF-16 units, so emoji do not inflate it. The
+        // element uses white-space: pre-wrap so double spaces stay visible.
+        const charCount = [...phrase].length;
+        scanResult.textContent = `Scanned phrase (${charCount} characters): "${phrase}". Check it is exactly right, including spacing and capitalisation, then press REGENERATE GRID. If it looks truncated or altered, type your phrase in full instead.`;
         scanResult.classList.remove('is-hidden');
       }
     },
@@ -1125,6 +1172,15 @@ const regenerateSeedGrid = (_event, indemnified) => {
       .classList.add('is-active');
     return;
   }
+  // The scan review message has served its purpose once the user commits to
+  // regenerating; clear it and any stale fingerprint so the phrase does not
+  // linger on screen next to the fresh grid's fingerprint.
+  const scanResult = document.getElementById('scanGridQRResult');
+  if (scanResult) {
+    scanResult.textContent = '';
+    scanResult.classList.add('is-hidden');
+  }
+  clearGridFingerprints();
   const words = [...wordList];
   shuffle(words, mnemonic);
   const typeOfGrid = document.getElementById('regenerateGridSelect').value;
@@ -1219,8 +1275,17 @@ const saveGrid = async (cells, seed, typeOfGrid, isRegeneration, words) => {
   // Grid fingerprint: shown on screen and printed on the grid so a later
   // regeneration can be checked against the original. Blank pattern grids have
   // no word order to identify, so they get none.
-  const fingerprint =
-    typeOfGrid === 'blank' ? '' : await gridFingerprint(words);
+  // The fingerprint is a convenience and must never block grid production.
+  // crypto.subtle can be unavailable (plain-http LAN, older browsers), where
+  // regeneration itself needs no WebCrypto; degrade to no fingerprint.
+  let fingerprint = '';
+  if (typeOfGrid !== 'blank') {
+    try {
+      fingerprint = await gridFingerprint(words);
+    } catch (e) {
+      console.error('Grid fingerprint unavailable:', e);
+    }
+  }
   const fpEl = document.getElementById(
     isRegeneration ? 'gridFingerprintRegeneration' : 'gridFingerprint'
   );
@@ -1338,7 +1403,7 @@ const saveGrid = async (cells, seed, typeOfGrid, isRegeneration, words) => {
       ...tableOpts,
     })
     .text(recovery, 105, 285, { align: 'center' })
-    .text(fpLine, 105, 291, { align: 'center' })
+    .text(fpLine, 105, 280, { align: 'center' })
     .addPage()
     .addImage(logo, 'PNG', 10, 5, 5, 5, 'logo', 'NONE', 0)
     .text(topText(2), 105, 10, { align: 'center' })
@@ -1347,7 +1412,7 @@ const saveGrid = async (cells, seed, typeOfGrid, isRegeneration, words) => {
       ...tableOpts,
     })
     .text(recovery, 105, 285, { align: 'center' })
-    .text(fpLine, 105, 291, { align: 'center' });
+    .text(fpLine, 105, 280, { align: 'center' });
   if (gridQRAvailable) {
     doc
       .addPage()
