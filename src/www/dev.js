@@ -763,6 +763,26 @@ function getKey(keyMaterial, salt, iterations = ITERATIONS) {
   );
 }
 
+// Authenticated Associated Data for version-2 encrypted files. It binds the
+// plaintext metadata (which sits outside the ciphertext) into the AES-GCM tag,
+// so tampering with the filename, type, version or iteration count is detected
+// on decryption. Version-1 files predate this and are decrypted without AAD,
+// exactly as before, so 1.0.5-era backups keep opening.
+const buildEncryptionAad = (version, info, iterations) =>
+  new TextEncoder().encode(JSON.stringify({ version, info, iterations }));
+
+// Neutralise path separators and control characters in a restored file's name
+// before it becomes a download. For version-1 files the name is not
+// authenticated, so this is the only guard against a tampered backup choosing
+// the download filename; ordinary names pass through unchanged.
+const sanitizeFileName = (name) => {
+  const cleaned = String(name ?? '')
+    .replace(/[\\/]/g, '_')
+    .replace(/[\x00-\x1f\x7f]/g, '')
+    .trim();
+  return cleaned || 'restored-file';
+};
+
 const encryptFile = async (file) => {
   try {
     const keyMaterial = await getKeyMaterial();
@@ -782,11 +802,13 @@ const encryptFile = async (file) => {
       updateProcessingStatus('building encrypted file...');
       const fileAsURL = e.target.result;
       const encoded = encoder.encode(fileAsURL);
-      const version = 1;
+      const version = 2;
       const ciphertext = await window.crypto.subtle.encrypt(
         {
           name: 'AES-GCM',
           iv: iv,
+          // Version-2 files authenticate their metadata via AAD.
+          additionalData: buildEncryptionAad(version, info, ITERATIONS),
         },
         key,
         encoded
@@ -823,8 +845,10 @@ const decryptFile = async (file) => {
       try {
         if (!e.target.result) throw new Error('No file found!');
         const data = JSON.parse(e.target.result);
-        if (data.version !== 1)
-          throw new Error('Only Version 1 is currently supported');
+        if (data.version !== 1 && data.version !== 2)
+          throw new Error(
+            `Unsupported encrypted file version "${data.version}".`
+          );
         if (
           !data.BWEG ||
           !data.iv ||
@@ -855,11 +879,18 @@ const decryptFile = async (file) => {
         updateProcessingStatus('generating the key...');
         const key = await getKey(keyMaterial, salt, iterations);
         updateProcessingStatus('decrypting...');
+        const algorithm = { name: 'AES-GCM', iv: iv };
+        // Version 2 binds the metadata via AAD; version 1 (including 1.0.5
+        // backups) was written without it and must be decrypted without it.
+        if (data.version === 2) {
+          algorithm.additionalData = buildEncryptionAad(
+            data.version,
+            data.info,
+            data.iterations
+          );
+        }
         const decrypted = await window.crypto.subtle.decrypt(
-          {
-            name: 'AES-GCM',
-            iv: iv,
-          },
+          algorithm,
           key,
           ciphertext
         );
@@ -867,7 +898,7 @@ const decryptFile = async (file) => {
         const decoded = decoder.decode(decrypted);
         if (!decoded.startsWith(`data:${data.info.type};base64,`))
           throw new Error('Failed to decrypt');
-        saveFile(decoded, data.info.name);
+        saveFile(decoded, sanitizeFileName(data.info.name));
       } catch (e) {
         endProcessing();
         alert(e);
@@ -995,13 +1026,17 @@ const GRIDQR_SUPPORTED_VERSION = 1;
 const parseGridQR = (data) => {
   if (!data?.startsWith(GRIDQR_PREFIX)) return { error: 'Invalid GridQR Code' };
   const body = data.slice(GRIDQR_PREFIX.length);
-  // Search from the right: encodeURI does not escape '?', so a phrase may
-  // legitimately contain one.
-  const marker = body.lastIndexOf('?v=');
-  const encodedPhrase = marker === -1 ? body : body.slice(0, marker);
-  // Codes predating the version parameter are treated as v1.
-  const version = marker === -1 ? GRIDQR_SUPPORTED_VERSION : body.slice(marker + 3);
-  if (Number(version) !== GRIDQR_SUPPORTED_VERSION) {
+  // Recognise the version only as a trailing ?v=<digits> suffix. encodeURI does
+  // not escape '?' or '=', so a phrase may itself contain '?v=' in its middle;
+  // anchoring to the end avoids splitting on that (unlike a lastIndexOf search,
+  // which truncated such phrases). A code with no trailing marker predates the
+  // version parameter and is treated as v1.
+  const versionMatch = body.match(/\?v=(\d+)$/);
+  const encodedPhrase = versionMatch ? body.slice(0, versionMatch.index) : body;
+  const version = versionMatch
+    ? Number(versionMatch[1])
+    : GRIDQR_SUPPORTED_VERSION;
+  if (version !== GRIDQR_SUPPORTED_VERSION) {
     return {
       error: `Unsupported GridQR version "${version}". This tool only supports v${GRIDQR_SUPPORTED_VERSION}. Use the version of the Entropy Grid Generator that produced this code.`,
     };
@@ -1028,6 +1063,11 @@ const parseGridQR = (data) => {
 
 const scanGridQR = () => {
   regenerateProblemBox('');
+  const scanResult = document.getElementById('scanGridQRResult');
+  if (scanResult) {
+    scanResult.textContent = '';
+    scanResult.classList.add('is-hidden');
+  }
   QRScanner.initiate({
     onResult: function (result) {
       const { phrase, error } = parseGridQR(result.data);
@@ -1035,9 +1075,16 @@ const scanGridQR = () => {
         regenerateProblemBox(error);
         return;
       }
+      // Do not regenerate straight from the scan. Show the decoded phrase and
+      // its length and let the user press REGENERATE GRID, so a legacy code that
+      // decoded to a truncated or altered phrase is caught before a wrong grid
+      // is built.
       regenerationPhraseInput.value = phrase;
       showPhraseStrength();
-      regenerateSeedGrid();
+      if (scanResult) {
+        scanResult.textContent = `Scanned phrase (${phrase.length} characters): "${phrase}". Check it is exactly right, then press REGENERATE GRID. If it looks truncated or altered, type your phrase in full instead.`;
+        scanResult.classList.remove('is-hidden');
+      }
     },
     onError: function (err) {
       regenerateProblemBox('ERROR :::: ' + err);
@@ -1082,7 +1129,7 @@ const regenerateSeedGrid = (_event, indemnified) => {
   shuffle(words, mnemonic);
   const typeOfGrid = document.getElementById('regenerateGridSelect').value;
   const cells = words.map(getCellValue[typeOfGrid]);
-  saveGrid(cells, mnemonic, typeOfGrid, true);
+  saveGrid(cells, mnemonic, typeOfGrid, true, words);
 };
 
 const generateSeedGrid = async () => {
@@ -1092,7 +1139,7 @@ const generateSeedGrid = async () => {
   shuffle(words, seed);
   const typeOfGrid = getGridType();
   const cells = words.map(getCellValue[typeOfGrid]);
-  saveGrid(cells, seed, typeOfGrid, false);
+  saveGrid(cells, seed, typeOfGrid, false, words);
 };
 
 // returns blank, char, num, idx or hex
@@ -1152,7 +1199,37 @@ const getTable = (cells, startIndex = 0) => {
 };
 
 /* cspell:disable */
-const saveGrid = async (cells, seed, typeOfGrid, isRegeneration) => {
+// A short, display-independent identity for a grid: SHA-256 of the shuffled
+// word order, first 4 bytes as hex. Printed on the grid and shown on screen so
+// that a user regenerating from their phrase can confirm they reproduced the
+// exact same grid. It is derived from the output and changes no derivation.
+const gridFingerprint = async (words) => {
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(words.join(' '))
+  );
+  return [...new Uint8Array(digest)]
+    .slice(0, 4)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+    .toUpperCase();
+};
+
+const saveGrid = async (cells, seed, typeOfGrid, isRegeneration, words) => {
+  // Grid fingerprint: shown on screen and printed on the grid so a later
+  // regeneration can be checked against the original. Blank pattern grids have
+  // no word order to identify, so they get none.
+  const fingerprint =
+    typeOfGrid === 'blank' ? '' : await gridFingerprint(words);
+  const fpEl = document.getElementById(
+    isRegeneration ? 'gridFingerprintRegeneration' : 'gridFingerprint'
+  );
+  if (fpEl) {
+    fpEl.textContent = fingerprint
+      ? `Grid fingerprint: ${fingerprint}. It is also printed on your grid; regenerate from your phrase later and check this matches.`
+      : '';
+    fpEl.classList.toggle('is-hidden', !fingerprint);
+  }
   // A GridQR encodes the Regeneration Phrase. Maximum Entropy grids have no
   // phrase — seed is null — and cannot be regenerated from one, so there is
   // nothing to encode. Emitting a QR anyway promises a backup that does not
@@ -1226,6 +1303,9 @@ const saveGrid = async (cells, seed, typeOfGrid, isRegeneration) => {
     typeOfGrid === 'blank'
       ? `Pt${page}/2    BWEG No.# ___________  Date: _____________`
       : `Pt${page}/2    BWEG No.# ___________  Date: _____________  Checksum verified?  Y/N   Checksum calculator/method:________________`;
+  // A space (not empty) keeps jsPDF happy on blank grids, which have no
+  // fingerprint; it prints nothing visible.
+  const fpLine = fingerprint ? `Grid Fingerprint: ${fingerprint}` : ' ';
   const logo =
     'data:image/png;base64,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';
   const doc = new jsPDF();
@@ -1258,6 +1338,7 @@ const saveGrid = async (cells, seed, typeOfGrid, isRegeneration) => {
       ...tableOpts,
     })
     .text(recovery, 105, 285, { align: 'center' })
+    .text(fpLine, 105, 291, { align: 'center' })
     .addPage()
     .addImage(logo, 'PNG', 10, 5, 5, 5, 'logo', 'NONE', 0)
     .text(topText(2), 105, 10, { align: 'center' })
@@ -1265,7 +1346,8 @@ const saveGrid = async (cells, seed, typeOfGrid, isRegeneration) => {
       body: getTable(cells.slice(1024), 1024),
       ...tableOpts,
     })
-    .text(recovery, 105, 285, { align: 'center' });
+    .text(recovery, 105, 285, { align: 'center' })
+    .text(fpLine, 105, 291, { align: 'center' });
   if (gridQRAvailable) {
     doc
       .addPage()
