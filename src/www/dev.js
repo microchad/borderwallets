@@ -1403,7 +1403,7 @@ const saveGrid = async (cells, seed, typeOfGrid, isRegeneration, words) => {
       ...tableOpts,
     })
     .text(recovery, 105, 285, { align: 'center' })
-    .text(fpLine, 105, 280, { align: 'center' })
+    .text(fpLine, 105, 290, { align: 'center' })
     .addPage()
     .addImage(logo, 'PNG', 10, 5, 5, 5, 'logo', 'NONE', 0)
     .text(topText(2), 105, 10, { align: 'center' })
@@ -1412,7 +1412,7 @@ const saveGrid = async (cells, seed, typeOfGrid, isRegeneration, words) => {
       ...tableOpts,
     })
     .text(recovery, 105, 285, { align: 'center' })
-    .text(fpLine, 105, 280, { align: 'center' });
+    .text(fpLine, 105, 290, { align: 'center' });
   if (gridQRAvailable) {
     doc
       .addPage()
