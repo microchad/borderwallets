@@ -277,8 +277,7 @@
               </div>
             </div>
           </div>
-          <div>
-          </div>
+          <p class="help is-hidden" id="gridFingerprint"></p>
           <article class="message is-dark">
             <div class="message-body">
               <div class="content">
@@ -821,6 +820,15 @@
                   Proceeding is at your own risk.
                 </p>
                 <p>
+                  <strong>Record your phrase exactly.</strong> Spacing and capitalisation are part of it:
+                  <span style="white-space: pre">"My Phrase"</span> and
+                  <span style="white-space: pre">"my  phrase"</span> produce different grids, and therefore different
+                  wallets. Grids printed by this
+                  version onward carry a short <strong>Grid Fingerprint</strong>; when you regenerate, check the
+                  fingerprint matches the one on your printed grid to confirm you reproduced it exactly. Grids made by
+                  earlier versions do not show one.
+                </p>
+                <p>
                   We recommend the <a href="https://www.eff.org/dice">EFF's Diceware Long Word List</a> if you wish to
                   do this
                   yourself. Note that
@@ -866,7 +874,8 @@
                   </div>
                 </div>
               </div>
-            </div><br><br>
+            </div>
+            <p class="help is-hidden" id="scanGridQRResult" style="white-space: pre-wrap; word-break: break-word;"></p><br><br>
           </div>
           <!-- Shared across all three regenerate options, so it must sit outside
                the .regenerate-option-sections blocks, which are hidden unless
@@ -920,6 +929,7 @@
               </div>
             </div>
           </div>
+          <p class="help is-hidden" id="gridFingerprintRegeneration"></p>
           <article class="message is-dark">
             <div class="message-body">
               <div class="content">
