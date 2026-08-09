@@ -17,7 +17,7 @@
     and fails the build if it cannot. Do not hand-edit that value.
   -->
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data:; connect-src ws://localhost:8080; object-src 'none'; base-uri 'none'; form-action 'none'">
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data:; connect-src ws://127.0.0.1:8080; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bitcoin Border Wallets</title>
@@ -4325,7 +4325,7 @@
         document.location.reload(true)
       }, 1000)
     }
-    const ws = new WebSocket('ws://localhost:8080');
+    const ws = new WebSocket('ws://127.0.0.1:8080');
     ws.onopen = () => {
       clearInterval(timer)
     }

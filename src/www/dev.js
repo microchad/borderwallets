@@ -57,8 +57,10 @@ const getLuckyNumber = (bits) =>
 const fillLuckyNumbers = () => {
   [12, 24].forEach((n) => {
     const entBits = 11 - n / 3;
-    document.getElementById(`finalRandom${n}`).value =
-      getLuckyNumber(entBits) + 1;
+    const input = document.getElementById(`finalRandom${n}`);
+    input.value = getLuckyNumber(entBits) + 1;
+    // The fresh value is always in range, so clear any stale invalid flag.
+    input.classList.remove('is-danger');
   });
 };
 fillLuckyNumbers();
@@ -67,28 +69,12 @@ const finalRandom12 = document.getElementById('finalRandom12');
 const finalRandom24 = document.getElementById('finalRandom24');
 
 [finalRandom12, finalRandom24].forEach((inp) => {
-  inp.oninput = () => {
-    try {
-      if (inp.value === '') return;
-      const n = parseInt(inp.value);
-      const max = parseInt(inp.max);
-      const min = parseInt(inp.min);
-      if (isNaN(n))
-        throw new TypeError('Final Word Recovery Number must be a number!');
-      if (n > max)
-        throw new RangeError(
-          'Final Word Recovery Number must be less than or equal to ' + max
-        );
-      if (n < min)
-        throw new RangeError(
-          'Final Word Recovery Number must be greater than or equal to ' + min
-        );
-      generateFinalWord();
-    } catch (error) {
-      console.error(error);
-      fillLuckyNumbers();
-    }
-  };
+  // Recompute through generateFinalWord, which is the single place that
+  // validates the recovery number (integer and in range) and clears any stale
+  // final word / SeedQR when it is invalid. Routing every path through it means
+  // an out-of-range or mistyped value can never reach derivation, and the
+  // user's value is never silently re-randomised.
+  inp.oninput = () => generateFinalWord();
 });
 
 // A Regeneration Phrase determines the whole grid, so its strength matters.
@@ -459,36 +445,65 @@ const generateFinalWord = async () => {
   if (words.includes('')) {
     finalWord.value = '';
     finalWord.classList.remove('has-text-white', 'has-background-info');
+    clearCompactSeedQR();
     return;
   }
   const wordIndexes = words.map((w) => wordList.indexOf(w));
   let wordsAreWrong = false;
-  let suggestions = '';
+  const suggestions = [];
   wordIndexes.forEach((wi, i) => {
     if (wi === -1) {
       wordsAreWrong = true;
       const nearestWord = findNearestWord(words[i]);
-      suggestions += `<li>"${words[i]}" is not in the word list, did you mean "${nearestWord}"?</li>`;
+      suggestions.push({ word: words[i], nearestWord });
     }
     inputs[i].classList.toggle('is-danger', wi === -1);
   });
   const finalWordSuggestions = document.getElementById('finalWordSuggestions');
   if (wordsAreWrong) {
     finalWord.value = '';
+    finalWord.classList.remove('has-text-white', 'has-background-info');
+    clearCompactSeedQR();
     finalWordSuggestions.classList.remove('is-hidden');
-    finalWordSuggestions.querySelector('ul').innerHTML = suggestions;
+    // Build the list with textContent, never innerHTML: words[i] is raw user
+    // input, so interpolating it into markup would let a typed string such as
+    // <img src=x onerror=...> execute (the CSP still allows inline handlers).
+    const ul = finalWordSuggestions.querySelector('ul');
+    ul.innerHTML = '';
+    suggestions.forEach(({ word, nearestWord }) => {
+      const li = document.createElement('li');
+      li.textContent = `"${word}" is not in the word list, did you mean "${nearestWord}"?`;
+      ul.appendChild(li);
+    });
     return;
   }
   finalWordSuggestions.classList.add('is-hidden');
   const numWords = words.length;
   const entLength = 11 - (numWords + 1) / 3;
-  const entBits = (
-    parseInt(
-      document.getElementById(
-        `finalRandom${currentAuto.section.includes('1') ? '12' : '24'}`
-      ).value
-    ) - 1
-  )
+  // The recovery number is entropy. An out-of-range, empty or non-integer value
+  // must never reach derivation: it would otherwise produce a valid-looking
+  // final word (and SeedQR) for a wallet the user cannot reproduce. This
+  // function is reached from the seed-word handlers too, not only the number
+  // field's own listener, so the check has to live here.
+  const recoveryInput = document.getElementById(
+    `finalRandom${currentAuto.section.includes('1') ? '12' : '24'}`
+  );
+  const recoveryNumber = parseInt(recoveryInput.value, 10);
+  const recoveryMin = parseInt(recoveryInput.min, 10);
+  const recoveryMax = parseInt(recoveryInput.max, 10);
+  if (
+    !Number.isInteger(recoveryNumber) ||
+    recoveryNumber < recoveryMin ||
+    recoveryNumber > recoveryMax
+  ) {
+    recoveryInput.classList.add('is-danger');
+    finalWord.value = '';
+    finalWord.classList.remove('has-text-white', 'has-background-info');
+    clearCompactSeedQR();
+    return;
+  }
+  recoveryInput.classList.remove('is-danger');
+  const entBits = (recoveryNumber - 1)
     .toString(2)
     .padStart(8, '0')
     .slice(8 - entLength);
@@ -728,17 +743,22 @@ function getKeyMaterial() {
     ['deriveBits', 'deriveKey']
   );
 }
-function getKey(keyMaterial, salt) {
+function getKey(keyMaterial, salt, iterations = ITERATIONS) {
   return window.crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
       salt: salt,
-      iterations: ITERATIONS,
+      // Derive with the count the file was encrypted at. Encryption always uses
+      // the current ITERATIONS constant; decryption must honour the per-file
+      // value, so that raising ITERATIONS later cannot lock out old backups.
+      iterations: iterations,
       hash: 'SHA-256',
     },
     keyMaterial,
     { name: 'AES-GCM', length: 256 },
-    true,
+    // Not extractable: the derived key is only ever used in-page to encrypt or
+    // decrypt the file, so nothing needs to export the raw key bytes.
+    false,
     ['encrypt', 'decrypt']
   );
 }
@@ -820,9 +840,20 @@ const decryptFile = async (file) => {
         const iv = new Uint8Array(atob(data.iv).split(','));
         const ciphertext = new Uint8Array(atob(data.ciphertext).split(','))
           .buffer;
+        // Derive with the file's own iteration count so a future rise in
+        // ITERATIONS cannot lock out old backups. Bound it so a tampered value
+        // cannot demand a pathologically slow derivation; the ceiling is far
+        // above the 10,000,000 this tool has ever written.
+        const iterations = data.iterations;
+        if (
+          !Number.isInteger(iterations) ||
+          iterations < 1 ||
+          iterations > 100000000
+        )
+          throw new Error('Unsupported iteration count in file');
         const keyMaterial = await getKeyMaterial();
         updateProcessingStatus('generating the key...');
-        const key = await getKey(keyMaterial, salt);
+        const key = await getKey(keyMaterial, salt, iterations);
         updateProcessingStatus('decrypting...');
         const decrypted = await window.crypto.subtle.decrypt(
           {
@@ -1126,13 +1157,10 @@ const saveGrid = async (cells, seed, typeOfGrid, isRegeneration) => {
   // phrase — seed is null — and cannot be regenerated from one, so there is
   // nothing to encode. Emitting a QR anyway promises a backup that does not
   // exist, and encodes the literal text "null".
-  const hasGridQR = typeOfGrid !== 'blank' && Boolean(seed);
-  document
-    .getElementById('gridQR')
-    .classList.toggle('is-hidden', !hasGridQR || isRegeneration);
-  document
-    .getElementById('gridQRRegeneration')
-    .classList.toggle('is-hidden', !hasGridQR || !isRegeneration);
+  // Whether this grid should carry a GridQR at all: Maximum Entropy grids have
+  // no phrase (seed is null) and blank pattern grids have nothing to encode.
+  let gridQRAvailable = typeOfGrid !== 'blank' && Boolean(seed);
+  let gridQRModuleCount = 0;
   const gridQRDiv = document.getElementById('gridQRDiv');
   const gridQRDivRegeneration = document.getElementById(
     'gridQRDivRegeneration'
@@ -1141,16 +1169,40 @@ const saveGrid = async (cells, seed, typeOfGrid, isRegeneration) => {
   // left over from a previous grid would otherwise be printed onto this one.
   gridQRDiv.innerHTML = '';
   gridQRDivRegeneration.innerHTML = '';
-  if (hasGridQR) {
+  if (gridQRAvailable) {
     const div = isRegeneration ? gridQRDivRegeneration : gridQRDiv;
-    const qr = new QRCode(0, 'L');
-    qr.addData(`bweg:${encodeURI(seed)}?v=1`);
-    qr.make();
-    div.innerHTML = qr.createSvgTag({
-      cellSize: 5,
-      scalable: true,
-    });
+    try {
+      // encodeURI can throw (e.g. a lone surrogate from a truncated paste), so
+      // it must sit inside the try alongside qr.make(); otherwise the rejection
+      // from this un-awaited async function would be swallowed silently.
+      const qr = new QRCode(0, 'L');
+      qr.addData(`bweg:${encodeURI(seed)}?v=1`);
+      qr.make();
+      gridQRModuleCount = qr.getModuleCount();
+      div.innerHTML = qr.createSvgTag({
+        cellSize: 5,
+        scalable: true,
+      });
+    } catch (e) {
+      // The grid itself does not depend on the QR, so never abort the PDF, and
+      // never advise changing the phrase (a different phrase is a different
+      // wallet). Log the real error and leave the QR off the backup.
+      console.error('GridQR generation failed:', e);
+      gridQRAvailable = false;
+      const msg =
+        'The GridQR could not be generated and has been left off the PDF. ' +
+        'Your grid and Regeneration Phrase are unaffected; keep the printed ' +
+        'grid and the phrase itself as your backup.';
+      if (isRegeneration) regenerateProblemBox(msg);
+    }
   }
+  // Show the on-screen QR container only if a QR was actually produced.
+  document
+    .getElementById('gridQR')
+    .classList.toggle('is-hidden', !gridQRAvailable || isRegeneration);
+  document
+    .getElementById('gridQRRegeneration')
+    .classList.toggle('is-hidden', !gridQRAvailable || !isRegeneration);
   const { jsPDF } = window.jspdf;
   const tableOpts = {
     theme: 'grid',
@@ -1178,10 +1230,16 @@ const saveGrid = async (cells, seed, typeOfGrid, isRegeneration) => {
     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAACWCAMAAABThUXgAAAAAXNSR0IArs4c6QAAAdRQTFRFAAAAAAABAAEAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAEAAQAAWkMlVAAAAJh0Uk5TAAAAAAUHCAoMDQ8SExQVFxkbHB0eICIjKCkqLi8xMzY3ODk6PD1AQkhMTU9RU1VXWVpbXV5gYmRlZmhtbnBxcnN0enuAhIWGh4mKi4yOj5GSlZeZmpudnp+io6Slp6iqra6wsbK1tba3uLm6u7+/w8TFxsfIysvMztHU1tfY2dvc3d7f4uTl5ufo6uvt7u/y8/T19vf4+vtL+sUfAAAHeUlEQVR42u2d/VsVRRTH90XwpczKFwxDTeUWGoQZ5i3N1FtexJQXEyFITUulbghCwC1DpUgQTcBoX/7ZwB542MvszpnZmdmZvXN+4tGZ3TOf/c7ZmTOzcw3DMDY3XxubdzjZi99/unL2LQNuCG+mCx1ZkiqFnVGl32m9NR68/txob347zLvaGS6U3FV/PztTCWUV5s3INpIq96pDS3+Mvv5sE8S7JkeEjW6AsYrwZhOgysoTKobR6g29fu3qYjay8vZZIbCcSyBWUd50otsQUuUi+gYfhV9/ZjPWvTy647C3TyCw8lFXOEhS5elWZOn+iOs3Y93r5cgnQP8XCKxIb04SVTmELP3X2oL+8h/XsO6NOoLsSagLJtCbNqIGHEO+N6OuP4aFNScKlvMqKnxaBN7cJmrAaVThPVHXn8fCQtfzAvpkYzUAZUVeoEDQANfJoQpnIm8Q7RvOPaaWAcQsNrBexko2sIzUw3I0rLKAtTyAqI8L62eOsFw2sJiF+TNaWXDrkRGWLyms59XlqiyPos6AvLA82ZTlON+8jvLA0jELnQW52Xk2l8t9tn+DDvBwWxhoCGrKFgrLVQpWWA5BKyvEsurBus8ZSfiYdkQ9WDeEKckDSEtyWBeS64ftysF6LzlYt/Etd2PCsksSeDFhGe3cZs44+42BskyhyjKM5qSU9QIFy5e5Gy7au3enMKkoTqZczPrfXtubYWMNuetxYHlufFg+b1gsrWEqbcqyIEuetAZ9SygY4NnbEWw+Xm5l2UJpAXd8WWoGeMY2lOq3IbWhFdvFFZYZCK/KKyunlQV/V+Zgkye1YVlaWbobxodlkYbt6P+1tLJiKMvXsHTM4gTL5QfLTgespWacF6csmwcsizGTyAFXtzrd0OOrLBP/L3d0zALbbhir+xrWoo3DYN1QH1bsTGndJDCr3KwkrK2Hjp3OMbKuMfDi424FYVVffCpytXBl8NWBabknIazqYjJLrNerQlruSqysewmAmuprrSNquSSwdorF1FtbVRG9iAbZGGKJgxVIsRTErNRHtUBKZVnE7rG2QUMZWAYtLGabkA6UASxmtoMlLDtZWLQKcqHarIB442plMfCGHpalPCxT/Zjlya0siwiWKX83dPl3Q7MMYtYbqRw6cOqMe3ALt2vk6Zfv27Bd8QA/J5TWh2p3w1HadtONYLvJsg7EsHwaWC4UFpvzs4hj3FRf635iWFbSysoLZbTanh8NZots+bshrzP/IByzTLuhJyCtzPo0SYJYNoJuuS/x6g6nc0odGmmxTdFYHNYN2Z6A6xN0xq8ZdENPqLJY264jnVCwBb3XYdGnKdgb4E/CmGWmEZbRAsxMsFGWpzasXZQJrnLshobxRE5YjVLC+pUdLJ8OVheqcDMPWBZq8ZrEChyUNUwEC3n47w0plcUD1gTZlsw64v2baYI1i7rR0dDik8T7N3kCMQXDcloQN7oSXny8ZGthDuJNvF2itjTKQj36bOTU6k73+eXtm5fvPiH2JrbZScJyTm0J6Hp3h9hlTQZmiYPlLDwuFpatOM04j6RugBd22BIQFq/DHmxmyoLvR3QV6YYoK3Lqhskpi8nBM2h7TOSepQQsXrZlgdg9MxlYXvKwTjkp7Ia8eimte4J2mMvUDVuo3VNAWQdPtt0usLLhiVl4pJAK1j8AVJs6SQMhv2eZKKwHeFbbSK/pphVWAQ9rRKYokSisbiyrrBA/QiZ688SweG6mzmNhdST5LNckM2cSdOYZ/md2C4JdCkijWOrNUIKwAD+iNJ2ksvpLvekR+noJ2Gglu7E2F3dPRO9DjJ/S8sExrmejwQMWFBy+qZPrSr3Zx1vLaIenhz9lOovjYYgV9qsi7z/z7RcfZDKZt19hPeVlbw/rY2QNYwSHlZLoH5iKhOUJJeQ7M0NdS0tTjTXr0Q4dfiTIlQF+yRRGI4aRLNajyuq644s0z30/QXSHC3vfXKpdsePAIKh8xI/i2WBYXDNKE0QPsokAVyPJ0vOSfVearTOjF/fEx6wmQt2DJ67BeR3ks5FLFDlOoawmSINEFjofDB6CUAuo8SVWR2vzxkJh/UAcUqGTxeAhCFV04xZsVp3PpC/EzhHDgk4Wg5+aVbCBlWw3JHcQeLK8E9kqXz1YHo2DORawkPZ5+pRFCQvw0UKGAtYc9TSYwo4Tr1FSwurDVvh3IwWsUZHKquOlrOmSEUArtsYgBStGn/0Cp6/VxO41wqYWpQsz77/sGV5EF6mjgZUXKKxHlcTu1cDm+Wt+DXcAU+ErqqV2Xp/9ouwwuXvrH0Iu/PfeNRUvR5UHTOdDZqvCWBVp3KuHXBl1XESm9dY44q01X7zZlqXfCCPqs9+rdA8zhz19eCSLbSS7TXuIz34ZZwRnhnry+2jdW3eivzgZ9lnyHz+203Ypi/PmR21CzRawn1VBM8WiT59ZWibl/DhtQ5u2oHBsjUCWl72tSemXWrmNb7k9TksLk3icZEqmBT3yVORhmCnuJmU32TBTgcZSmHK5xUT2SpFuUG1L3VVZ9DBLOlnpeJzKkYdOY+l5sn6WCdl/8dGlGTlWWkAAAAAASUVORK5CYII=';
   const doc = new jsPDF();
   let canvas;
-  if (hasGridQR) {
+  if (gridQRAvailable) {
+    // Size the canvas to the actual QR: createSvgTag draws at cellSize 5 with a
+    // 4-module (20px) quiet zone each side, so the path spans
+    // moduleCount * 5 + 40 px. A fixed 300px canvas clipped the right and bottom
+    // of version 10+ codes, producing a printed QR that looked fine but would
+    // not scan. jsPDF scales the image into its placement box regardless.
+    const qrCanvasSize = gridQRModuleCount * 5 + 40;
     canvas = document.createElement('canvas');
-    canvas.setAttribute('height', '300');
-    canvas.setAttribute('width', '300');
+    canvas.setAttribute('height', String(qrCanvasSize));
+    canvas.setAttribute('width', String(qrCanvasSize));
     const ctx = canvas.getContext('2d');
     const p = new Path2D(
       document.querySelector('#gridQRDiv > svg > path')?.getAttribute('d') ||
@@ -1208,7 +1266,7 @@ const saveGrid = async (cells, seed, typeOfGrid, isRegeneration) => {
       ...tableOpts,
     })
     .text(recovery, 105, 285, { align: 'center' });
-  if (hasGridQR) {
+  if (gridQRAvailable) {
     doc
       .addPage()
       .addImage(canvas, 'PNG', 20, 20, 100, 100)

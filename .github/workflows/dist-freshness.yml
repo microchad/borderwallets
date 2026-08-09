@@ -1,0 +1,26 @@
+name: dist-freshness
+
+# The distributed artifact is the committed dist/borderwallets.html. It must
+# always equal a fresh build of src/, otherwise users clone a stale file and the
+# documented build-and-compare verification fails. build.js has no runtime
+# dependencies, so this needs no install step.
+
+on:
+  # Only gh-pages on push (releases and direct pushes land there); pull_request
+  # covers every branch and fork PR without double-running the check.
+  push:
+    branches: [gh-pages]
+  pull_request:
+
+jobs:
+  verify-dist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Rebuild dist from src
+        run: node src/build.js
+      - name: Fail if committed dist/ differs from a fresh build
+        run: git diff --exit-code -- dist/
